@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { UserCircle } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const PersonalInfo = () => {
   const [formData, setFormData] = useState({
@@ -17,21 +18,32 @@ const PersonalInfo = () => {
     email: '',
     college: '',
     batch: '',
-    shirtSize: '',
-    pantSize: '',
-    shoeSize: '',
     agreeToTerms: false,
   });
+  const [measurementData, setMeasurementData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get measurement data from localStorage
+    const storedData = localStorage.getItem('measurementData');
+    if (storedData) {
+      setMeasurementData(JSON.parse(storedData));
+    } else {
+      // If no measurement data, redirect back to student form
+      navigate('/student-form');
+    }
+  }, [navigate]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     // Validation
     if (!formData.name || !formData.mobile || !formData.email || !formData.college || !formData.batch) {
@@ -40,6 +52,7 @@ const PersonalInfo = () => {
         description: "Please fill in all required fields.",
         variant: "destructive",
       });
+      setIsLoading(false);
       return;
     }
 
@@ -49,19 +62,58 @@ const PersonalInfo = () => {
         description: "Please agree to the terms and conditions to continue.",
         variant: "destructive",
       });
+      setIsLoading(false);
       return;
     }
 
-    // Here you would save to database via Supabase
-    console.log('Personal info submitted:', formData);
-    
-    toast({
-      title: "Success!",
-      description: "Your information has been submitted successfully.",
-    });
+    if (!measurementData) {
+      toast({
+        title: "Missing Measurements",
+        description: "Please complete the measurement process first.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
 
-    // Navigate to success page or back to home
-    navigate('/');
+    try {
+      // Combine personal info with measurement data
+      const completeSubmission = {
+        ...formData,
+        ...measurementData,
+        agreeToTerms: undefined // Remove from database submission
+      };
+
+      // Save to Supabase (comment out for now since we need actual Supabase credentials)
+      // const { data, error } = await supabase
+      //   .from('students')
+      //   .insert([completeSubmission]);
+
+      // if (error) throw error;
+
+      // For now, just log the data
+      console.log('Complete submission:', completeSubmission);
+      
+      // Clear localStorage
+      localStorage.removeItem('measurementData');
+      
+      toast({
+        title: "Success!",
+        description: "Your information has been submitted successfully.",
+      });
+
+      // Navigate back to home
+      navigate('/');
+    } catch (error) {
+      console.error('Error submitting data:', error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your information. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -150,62 +202,6 @@ const PersonalInfo = () => {
                 </div>
               </div>
 
-              {/* Size Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Size Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="shirtSize">Shirt Size</Label>
-                    <Select value={formData.shirtSize} onValueChange={(value) => handleInputChange('shirtSize', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="xs">XS</SelectItem>
-                        <SelectItem value="s">S</SelectItem>
-                        <SelectItem value="m">M</SelectItem>
-                        <SelectItem value="l">L</SelectItem>
-                        <SelectItem value="xl">XL</SelectItem>
-                        <SelectItem value="xxl">XXL</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="pantSize">Pant Size</Label>
-                    <Select value={formData.pantSize} onValueChange={(value) => handleInputChange('pantSize', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="28">28</SelectItem>
-                        <SelectItem value="30">30</SelectItem>
-                        <SelectItem value="32">32</SelectItem>
-                        <SelectItem value="34">34</SelectItem>
-                        <SelectItem value="36">36</SelectItem>
-                        <SelectItem value="38">38</SelectItem>
-                        <SelectItem value="40">40</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="shoeSize">Shoe Size</Label>
-                    <Select value={formData.shoeSize} onValueChange={(value) => handleInputChange('shoeSize', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="6">6</SelectItem>
-                        <SelectItem value="7">7</SelectItem>
-                        <SelectItem value="8">8</SelectItem>
-                        <SelectItem value="9">9</SelectItem>
-                        <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="11">11</SelectItem>
-                        <SelectItem value="12">12</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
 
               {/* Terms and Conditions */}
               <div className="space-y-4">
@@ -233,9 +229,10 @@ const PersonalInfo = () => {
                 <Button 
                   type="submit" 
                   size="lg" 
+                  disabled={isLoading}
                   className="bg-gradient-primary hover:shadow-elegant transition-all duration-300 px-8"
                 >
-                  Submit Information
+                  {isLoading ? 'Submitting...' : 'Submit Information'}
                 </Button>
               </div>
             </form>

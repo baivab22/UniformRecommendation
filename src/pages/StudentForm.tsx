@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, UserCheck, Shirt, ShoppingBag, Footprints } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import MeasurementForm from "@/components/MeasurementForm";
 
 const StudentForm = () => {
   const [step, setStep] = useState<'gender' | 'clothing' | 'measurements'>('gender');
   const [selectedGender, setSelectedGender] = useState<'male' | 'female' | null>(null);
   const [selectedClothing, setSelectedClothing] = useState<'shirt' | 'pant' | 'shoes' | null>(null);
+  const [measurementData, setMeasurementData] = useState<any>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleGenderSelect = (gender: 'male' | 'female') => {
     setSelectedGender(gender);
@@ -23,8 +26,22 @@ const StudentForm = () => {
   };
 
   const handleMeasurementSubmit = (data: any) => {
-    // Here you would save to database via Supabase
-    console.log('Measurement data:', { selectedGender, selectedClothing, ...data });
+    // Store measurement data and pass to personal info
+    const completeData = {
+      gender: selectedGender,
+      clothingType: selectedClothing,
+      ...data
+    };
+    setMeasurementData(completeData);
+    
+    // Store in localStorage temporarily
+    localStorage.setItem('measurementData', JSON.stringify(completeData));
+    
+    toast({
+      title: "Measurements Recorded",
+      description: "Now please provide your personal information.",
+    });
+    
     navigate('/personal-info');
   };
 

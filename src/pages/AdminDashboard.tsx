@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, UserCheck, Shirt, ShoppingBag, Footprints, Download, Search, Filter } from "lucide-react";
+import { Users, UserCheck, Shirt, ShoppingBag, Footprints, Download, Search, Filter, LogOut } from "lucide-react";
 
 // Mock data - in real app this would come from Supabase
 const mockStudents = [
@@ -55,25 +56,20 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCollege, setFilterCollege] = useState("all");
   const [filterBatch, setFilterBatch] = useState("all");
+  const navigate = useNavigate();
 
-  // In real app, check authentication here
-  const isAuthenticated = true; // This would be from Supabase auth
+  // Check authentication
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem('isAdminAuthenticated');
+    if (!isAuthenticated) {
+      navigate('/admin-login');
+    }
+  }, [navigate]);
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>Admin Access Required</CardTitle>
-            <CardDescription>Please log in to access the dashboard</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full">Login with Admin Credentials</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const handleLogout = () => {
+    localStorage.removeItem('isAdminAuthenticated');
+    navigate('/admin-login');
+  };
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,9 +92,15 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-accent/5 to-background p-4">
       <div className="container mx-auto max-w-7xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground text-lg">Manage student measurements and orders</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
+            <p className="text-muted-foreground text-lg">Manage student measurements and orders</p>
+          </div>
+          <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
         </div>
 
         {/* Stats Cards */}
