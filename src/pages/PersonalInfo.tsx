@@ -1,10 +1,22 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
@@ -13,11 +25,11 @@ import { supabase } from "@/lib/supabase";
 
 const PersonalInfo = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    mobile: '',
-    email: '',
-    college: '',
-    batch: '',
+    name: "",
+    mobile: "",
+    email: "",
+    college: "",
+    batch: "",
     agreeToTerms: false,
   });
   const [measurementData, setMeasurementData] = useState<any>(null);
@@ -27,26 +39,30 @@ const PersonalInfo = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get measurement data from localStorage
-    const storedData = localStorage.getItem('measurementData');
+    const storedData = localStorage.getItem("measurementData");
     if (storedData) {
       setMeasurementData(JSON.parse(storedData));
     } else {
-      // If no measurement data, redirect back to student form
-      navigate('/student-form');
+      navigate("/student-form");
     }
   }, [navigate]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Validation
-    if (!formData.name || !formData.mobile || !formData.email || !formData.college || !formData.batch) {
+
+    // Validate required fields
+    if (
+      !formData.name ||
+      !formData.mobile ||
+      !formData.email ||
+      !formData.college ||
+      !formData.batch
+    ) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -77,38 +93,42 @@ const PersonalInfo = () => {
     }
 
     try {
-      // Combine personal info with measurement data
-      const completeSubmission = {
+      // Merge form data and measurement data
+      const combinedData = {
         ...formData,
         ...measurementData,
-        agreeToTerms: undefined // Remove from database submission
+        agreeToTerms: undefined, // don't send this to DB
       };
 
-      // Save to Supabase (comment out for now since we need actual Supabase credentials)
-      // const { data, error } = await supabase
-      //   .from('students')
-      //   .insert([completeSubmission]);
+      // Remove any undefined/null/empty values
+      const cleanedData = Object.fromEntries(
+        Object.entries(combinedData).filter(
+          ([_, value]) => value !== null && value !== "" && value !== undefined
+        )
+      );
 
-      // if (error) throw error;
+      // Send to Supabase
+      const { data, error } = await supabase
+        .from("students")
+        .insert([cleanedData]);
 
-      // For now, just log the data
-      console.log('Complete submission:', completeSubmission);
-      
-      // Clear localStorage
-      localStorage.removeItem('measurementData');
-      
+      if (error) throw error;
+
+      // Clean up
+      localStorage.removeItem("measurementData");
+
       toast({
         title: "Success!",
         description: "Your information has been submitted successfully.",
       });
 
-      // Navigate back to home
-      navigate('/');
+      navigate("/");
     } catch (error) {
-      console.error('Error submitting data:', error);
+      console.error("❌ Error submitting to Supabase:", error);
       toast({
         title: "Submission Failed",
-        description: "There was an error submitting your information. Please try again.",
+        description:
+          "There was an error submitting your information. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -124,14 +144,16 @@ const PersonalInfo = () => {
             <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center">
               <UserCircle className="h-8 w-8 text-white" />
             </div>
-            <CardTitle className="text-3xl font-semibold">Personal Information</CardTitle>
+            <CardTitle className="text-3xl font-semibold">
+              Personal Information
+            </CardTitle>
             <CardDescription className="text-lg">
               Please provide your personal details to complete the registration
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Information */}
+              {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name *</Label>
@@ -139,7 +161,7 @@ const PersonalInfo = () => {
                     id="name"
                     placeholder="John Doe"
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     required
                   />
                 </div>
@@ -150,7 +172,9 @@ const PersonalInfo = () => {
                     type="tel"
                     placeholder="+91 9876543210"
                     value={formData.mobile}
-                    onChange={(e) => handleInputChange('mobile', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("mobile", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -163,23 +187,32 @@ const PersonalInfo = () => {
                   type="email"
                   placeholder="john.doe@example.com"
                   value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
                   required
                 />
               </div>
 
-              {/* Academic Information */}
+              {/* Academic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="college">College/Institution *</Label>
-                  <Select value={formData.college} onValueChange={(value) => handleInputChange('college', value)}>
+                  <Select
+                    value={formData.college}
+                    onValueChange={(value) =>
+                      handleInputChange("college", value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select college" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="mit">MIT College</SelectItem>
-                      <SelectItem value="stanford">Stanford University</SelectItem>
-                      <SelectItem value="harvard">Harvard University</SelectItem>
+                      <SelectItem value="stanford">
+                        Stanford University
+                      </SelectItem>
+                      <SelectItem value="harvard">
+                        Harvard University
+                      </SelectItem>
                       <SelectItem value="oxford">Oxford University</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
@@ -187,7 +220,10 @@ const PersonalInfo = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="batch">Batch/Year *</Label>
-                  <Select value={formData.batch} onValueChange={(value) => handleInputChange('batch', value)}>
+                  <Select
+                    value={formData.batch}
+                    onValueChange={(value) => handleInputChange("batch", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select batch" />
                     </SelectTrigger>
@@ -202,8 +238,7 @@ const PersonalInfo = () => {
                 </div>
               </div>
 
-
-              {/* Terms and Conditions */}
+              {/* Terms & Conditions */}
               <div className="space-y-4">
                 <div className="rounded-lg border p-4 bg-muted/50">
                   <h4 className="font-semibold mb-2">Terms & Conditions</h4>
@@ -217,7 +252,9 @@ const PersonalInfo = () => {
                   <Checkbox
                     id="terms"
                     checked={formData.agreeToTerms}
-                    onCheckedChange={(checked) => handleInputChange('agreeToTerms', !!checked)}
+                    onCheckedChange={(checked) =>
+                      handleInputChange("agreeToTerms", !!checked)
+                    }
                   />
                   <Label htmlFor="terms" className="text-sm">
                     I agree to the terms and conditions *
@@ -226,13 +263,13 @@ const PersonalInfo = () => {
               </div>
 
               <div className="flex justify-center pt-6">
-                <Button 
-                  type="submit" 
-                  size="lg" 
+                <Button
+                  type="submit"
+                  size="lg"
                   disabled={isLoading}
                   className="bg-gradient-primary hover:shadow-elegant transition-all duration-300 px-8"
                 >
-                  {isLoading ? 'Submitting...' : 'Submit Information'}
+                  {isLoading ? "Submitting..." : "Submit Information"}
                 </Button>
               </div>
             </form>
