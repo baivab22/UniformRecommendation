@@ -19,7 +19,10 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', 'sans-serif'],
+				'poppins': ['Poppins', 'system-ui', '-apple-system', 'sans-serif'],
+				'playfair': ['Playfair Display', 'serif'],
+				'inter': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+				sans: ['Poppins', 'system-ui', '-apple-system', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
