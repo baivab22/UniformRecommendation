@@ -229,7 +229,7 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
       case "fit":
         return formData.fitPreference !== "";
       case "chestType":
-        return clothingType !== "shirt" || formData.chestType !== "";
+        return clothingType !== "shirt" || (formData.chestType !== "" && formData.chest !== "");
       case "measurements":
         return validateMeasurements();
       case "recommendation":
@@ -404,54 +404,54 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
         )}
 
         {currentStep === "chestType" && clothingType === "shirt" && (
-          <div className="text-center space-y-8">
-            <div className="space-y-3">
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">Chest Type</h2>
-              <p className="text-gray-600 text-lg">
-                Choose the chest type that best describes you to help estimate your size
-              </p>
-            </div>
-            <RadioGroup
-              value={formData.chestType}
-              onValueChange={(value) => handleInputChange("chestType", value)}
-              className="grid grid-cols-2 md:grid-cols-4 gap-6"
-            >
-              {getChestTypes().map((option) => (
-                <div key={option.id} className="flex flex-col items-center">
-                  <Label
-                    htmlFor={`chest-${option.id}`}
-                    className="cursor-pointer border-2 border-blue-200 rounded-xl p-6 hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 flex flex-col items-center space-y-3 w-full transform hover:scale-105"
-                  >
-                    <RadioGroupItem
-                      value={option.id}
-                      id={`chest-${option.id}`}
-                      className="sr-only"
-                    />
-                    <div className="text-4xl">{option.icon}</div>
-                    <span className="font-semibold text-lg text-gray-800">{option.label}</span>
-                    <span className="text-sm text-gray-600 text-center">{option.description}</span>
-                    <span className="text-xs text-blue-600 font-medium">{option.range}</span>
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-        )}
-
-        {currentStep === "measurements" && (
           <div className="space-y-8">
             <div className="text-center space-y-3">
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">Chest Measurement</h2>
+              <h2 className="text-3xl font-bold font-playfair text-gray-800">Chest Type & Measurement</h2>
               <p className="text-gray-600 text-lg">
-                Enter your precise chest measurement for the perfect fit
+                Choose your chest type and enter your precise measurement
               </p>
             </div>
 
-            {clothingType === "shirt" && (
-              <div className="max-w-2xl mx-auto space-y-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <h3 className="font-semibold text-blue-800 mb-3">📏 How to Measure Your Chest</h3>
-                  <ul className="text-sm text-blue-700 space-y-2">
+            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              {/* Chest Type Selection */}
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-gray-800 text-center">What's Your Chest Type?</h3>
+                <RadioGroup
+                  value={formData.chestType}
+                  onValueChange={(value) => handleInputChange("chestType", value)}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  {getChestTypes().map((option) => (
+                    <div key={option.id}>
+                      <Label
+                        htmlFor={`chest-${option.id}`}
+                        className="cursor-pointer border-2 border-blue-200 rounded-xl p-4 hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 flex flex-col items-center space-y-2 w-full transform hover:scale-105"
+                      >
+                        <RadioGroupItem
+                          value={option.id}
+                          id={`chest-${option.id}`}
+                          className="sr-only"
+                        />
+                        <div className="text-3xl">{option.icon}</div>
+                        <span className="font-semibold text-base text-gray-800">{option.label}</span>
+                        <span className="text-xs text-gray-600 text-center">{option.description}</span>
+                        <span className="text-xs text-blue-600 font-medium">{option.range}</span>
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+
+              {/* Chest Measurement */}
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-gray-800 text-center">Enter Your Measurement</h3>
+                
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                  <h4 className="font-semibold text-blue-800 mb-4 flex items-center gap-2">
+                    <Ruler className="h-5 w-5" />
+                    How to Measure Your Chest
+                  </h4>
+                  <ul className="text-sm text-blue-700 space-y-2 mb-6">
                     <li>• Wrap tape measure around the fullest part of your chest</li>
                     <li>• Keep the tape parallel to the floor</li>
                     <li>• Breathe normally and don't pull the tape too tight</li>
@@ -485,9 +485,18 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                   </p>
                 </div>
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {clothingType === "pant" && (
+        {currentStep === "measurements" && clothingType === "pant" && (
+          <div className="space-y-8">
+            <div className="text-center space-y-3">
+              <h2 className="text-3xl font-bold font-playfair text-gray-800">Pant Measurements</h2>
+              <p className="text-gray-600 text-lg">
+                Enter your precise measurements for the perfect fit
+              </p>
+            </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 <div className="space-y-3">
                   <Label htmlFor="waist" className="text-lg font-medium text-gray-700">Waist (cm) *</Label>
@@ -536,9 +545,17 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                   </div>
                 )}
               </div>
-            )}
+          </div>
+        )}
 
-            {clothingType === "shoes" && (
+        {currentStep === "measurements" && clothingType === "shoes" && (
+          <div className="space-y-8">
+            <div className="text-center space-y-3">
+              <h2 className="text-3xl font-bold font-playfair text-gray-800">Shoe Measurements</h2>
+              <p className="text-gray-600 text-lg">
+                Enter your precise foot measurements for the perfect fit
+              </p>
+            </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 <div className="space-y-3">
                   <Label htmlFor="footLength" className="text-lg font-medium text-gray-700">Foot Length (cm) *</Label>
@@ -579,7 +596,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                   </Select>
                 </div>
               </div>
-            )}
           </div>
         )}
 
