@@ -18,7 +18,15 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
-import { Ruler, ArrowLeft, User, Shirt, ShoppingBag, Footprints, CheckCircle } from "lucide-react";
+import {
+  Ruler,
+  ArrowLeft,
+  User,
+  Shirt,
+  ShoppingBag,
+  Footprints,
+  CheckCircle,
+} from "lucide-react";
 
 type Props = {
   clothingType: "shirt" | "pant" | "shoes";
@@ -26,7 +34,13 @@ type Props = {
   onSubmit: (data: any) => void;
 };
 
-type MeasurementStep = "personal" | "morphology" | "fit" | "chestType" | "measurements" | "recommendation";
+type MeasurementStep =
+  | "personal"
+  | "morphology"
+  | "fit"
+  | "chestType"
+  | "measurements"
+  | "recommendation";
 
 const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
   const [currentStep, setCurrentStep] = useState<MeasurementStep>("personal");
@@ -58,7 +72,14 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
 
   const getSteps = (): MeasurementStep[] => {
     if (clothingType === "shirt") {
-      return ["personal", "morphology", "fit", "chestType", "measurements", "recommendation"];
+      return [
+        "personal",
+        "morphology",
+        "fit",
+        "chestType",
+        "measurements",
+        "recommendation",
+      ];
     } else {
       return ["personal", "morphology", "fit", "measurements"];
     }
@@ -71,67 +92,101 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
   const getSizeFromChest = (chestSize: number): string => {
     // Size chart based on provided image
     const sizeChart = [
-      { size: "3XS", min: 70, max: 75 },
-      { size: "2XS", min: 75, max: 80 },
-      { size: "XS", min: 80, max: 85 },
-      { size: "S", min: 85, max: 95 },
-      { size: "M", min: 95, max: 105 },
-      { size: "L", min: 105, max: 115 },
-      { size: "XL", min: 115, max: 120 },
-      { size: "2XL", min: 120, max: 125 },
-      { size: "3XL", min: 125, max: 140 },
-      { size: "4XL", min: 140, max: 150 },
+      { maleSize: "3XS", min: 70, max: 75, femaleSize: "L" },
+      { maleSize: "2XS", min: 75, max: 80, femaleSize: "XL" },
+      { maleSize: "XS", min: 80, max: 85, femaleSize: "2XL" },
+      { maleSize: "S", min: 85, max: 95, femaleSize: "3XL" },
+      { maleSize: "M", min: 95, max: 105, femaleSize: "4XL" },
     ];
 
     // Filter based on gender
-    const availableSizes = gender === "male" 
-      ? sizeChart.filter(s => ["3XS", "2XS", "XS", "S", "M"].includes(s.size))
-      : sizeChart.filter(s => ["L", "XL", "2XL", "3XL", "4XL"].includes(s.size));
+    // const availableSizes =
+    //   gender === "male"
+    //     ? sizeChart.filter((s) =>
+    //         ["3XS", "2XS", "XS", "S", "M"].includes(s.size)
+    //       )
+    //     : sizeChart.filter((s) =>
+    //         ["L", "XL", "2XL", "3XL", "4XL"].includes(s.size)
+    //       );
 
-    for (const size of availableSizes) {
+    for (const size of sizeChart) {
       if (chestSize >= size.min && chestSize <= size.max) {
-        return size.size;
+        return gender === "male" ? size.maleSize : size.femaleSize;
       }
     }
 
     // If no exact match, find closest
     if (gender === "male") {
-      return chestSize < 70 ? "3XS" : "M";
+      return chestSize < 70 ? "3XS" : chestSize > 105 ? "M" : "XS";
     } else {
-      return chestSize < 105 ? "L" : "4XL";
+      return chestSize < 70 ? "L" : chestSize > 105 ? "4XL" : "2XL";
     }
   };
 
   const getAdjustedSize = (baseSize: string): string => {
-    const sizes = gender === "male" 
-      ? ["3XS", "2XS", "XS", "S", "M"]
-      : ["L", "XL", "2XL", "3XL", "4XL"];
-    
+    const sizes =
+      gender === "male"
+        ? ["3XS", "2XS", "XS", "S", "M"]
+        : ["L", "XL", "2XL", "3XL", "4XL"];
+
     const currentIndex = sizes.indexOf(baseSize);
-    
+
     // Adjust for body type
     let adjustment = 0;
     if (formData.morphology === "broad") adjustment += 1;
     if (formData.fitPreference === "loose") adjustment += 1;
     if (formData.fitPreference === "slim") adjustment -= 1;
 
-    const newIndex = Math.max(0, Math.min(sizes.length - 1, currentIndex + adjustment));
+    const newIndex = Math.max(
+      0,
+      Math.min(sizes.length - 1, currentIndex + adjustment)
+    );
     return sizes[newIndex];
   };
 
   const getMorphologyOptions = () => {
     if (gender === "female") {
       return [
-        { id: "petite", label: "Petite", icon: "👩‍🦱", description: "Small frame" },
-        { id: "curvy", label: "Curvy", icon: "👩", description: "Defined waist" },
-        { id: "athletic", label: "Athletic", icon: "🏃‍♀️", description: "Sporty build" },
-        { id: "plus", label: "Plus Size", icon: "👩‍🦳", description: "Fuller figure" },
+        {
+          id: "petite",
+          label: "Petite",
+          icon: "👩‍🦱",
+          description: "Small frame",
+        },
+        {
+          id: "curvy",
+          label: "Curvy",
+          icon: "👩",
+          description: "Defined waist",
+        },
+        {
+          id: "athletic",
+          label: "Athletic",
+          icon: "🏃‍♀️",
+          description: "Sporty build",
+        },
+        {
+          id: "plus",
+          label: "Plus Size",
+          icon: "👩‍🦳",
+          description: "Fuller figure",
+        },
       ];
     } else {
       return [
         { id: "slim", label: "Slim", icon: "👤", description: "Lean build" },
-        { id: "athletic", label: "Athletic", icon: "💪", description: "Muscular" },
-        { id: "regular", label: "Regular", icon: "🧍", description: "Average build" },
+        {
+          id: "athletic",
+          label: "Athletic",
+          icon: "💪",
+          description: "Muscular",
+        },
+        {
+          id: "regular",
+          label: "Regular",
+          icon: "🧍",
+          description: "Average build",
+        },
         { id: "broad", label: "Broad", icon: "🫃", description: "Wide frame" },
       ];
     }
@@ -139,8 +194,16 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
 
   const getFitOptions = () => {
     const baseOptions = [
-      { id: "slim", label: "Slim Fit", description: "Close-fitting silhouette" },
-      { id: "regular", label: "Regular Fit", description: "Standard comfortable fit" },
+      {
+        id: "slim",
+        label: "Slim Fit",
+        description: "Close-fitting silhouette",
+      },
+      {
+        id: "regular",
+        label: "Regular Fit",
+        description: "Standard comfortable fit",
+      },
       { id: "loose", label: "Loose Fit", description: "Relaxed and roomy" },
     ];
 
@@ -159,33 +222,33 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
 
   const getChestTypes = () => {
     return [
-      { 
-        id: "athletic", 
-        label: "Athletic", 
-        icon: "💪", 
+      {
+        id: "athletic",
+        label: "Athletic",
+        icon: "💪",
         description: "Well-defined chest muscles",
-        range: "Usually 95-110 cm"
+        range: "Usually 95-110 cm",
       },
-      { 
-        id: "average", 
-        label: "Average", 
-        icon: "👤", 
+      {
+        id: "average",
+        label: "Average",
+        icon: "👤",
         description: "Normal chest proportions",
-        range: "Usually 85-100 cm"
+        range: "Usually 85-100 cm",
       },
-      { 
-        id: "slim", 
-        label: "Slim", 
-        icon: "🥢", 
+      {
+        id: "slim",
+        label: "Slim",
+        icon: "🥢",
         description: "Lean chest build",
-        range: "Usually 75-90 cm"
+        range: "Usually 75-90 cm",
       },
-      { 
-        id: "broad", 
-        label: "Broad", 
-        icon: "🫃", 
+      {
+        id: "broad",
+        label: "Broad",
+        icon: "🫃",
         description: "Wide chest frame",
-        range: "Usually 100-120 cm"
+        range: "Usually 100-120 cm",
       },
     ];
   };
@@ -196,19 +259,47 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
 
   const handleNext = () => {
     const currentIndex = steps.indexOf(currentStep);
-    
+    console.log(
+      currentStep === "measurements",
+      clothingType === "shirt",
+      "data final",
+      currentIndex,
+      "currentIndex",
+      steps.length - 2,
+      steps.length,
+      "steps length - 1",
+      currentStep,
+      currentStep === "measurements" && clothingType === "shirt",
+      currentIndex < steps.length - 3
+    );
+    const chestSize = parseInt(formData.chest);
     if (currentStep === "measurements" && clothingType === "shirt") {
       // Calculate recommended size
-      const chestSize = parseInt(formData.chest);
+
       if (chestSize) {
         const baseSize = getSizeFromChest(chestSize);
         const adjustedSize = getAdjustedSize(baseSize);
-        setFormData(prev => ({ ...prev, recommendedSize: adjustedSize }));
+        setFormData((prev) => ({ ...prev, recommendedSize: adjustedSize }));
       }
       setCurrentStep("recommendation");
     } else if (currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1]);
+      if (currentIndex === 3) {
+        // setCurrentStep("measurements");
+        // onSubmit(formData);
+        // setCurrentStep("recommendation");
+        // setCurrentStep("measurements");
+
+        if (chestSize) {
+          const baseSize = getSizeFromChest(chestSize);
+          const adjustedSize = getAdjustedSize(baseSize);
+          setFormData((prev) => ({ ...prev, recommendedSize: adjustedSize }));
+        }
+        setCurrentStep("recommendation");
+      } else {
+        setCurrentStep(steps[currentIndex + 1]);
+      }
     } else {
+      console.log("hi consoleeee");
       onSubmit(formData);
     }
   };
@@ -229,7 +320,10 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
       case "fit":
         return formData.fitPreference !== "";
       case "chestType":
-        return clothingType !== "shirt" || (formData.chestType !== "" && formData.chest !== "");
+        return (
+          clothingType !== "shirt" ||
+          (formData.chestType !== "" && formData.chest !== "")
+        );
       case "measurements":
         return validateMeasurements();
       case "recommendation":
@@ -247,7 +341,9 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
       if (gender === "female") {
         required.push("hipCircumference");
       }
-      return required.every(field => formData[field as keyof typeof formData]);
+      return required.every(
+        (field) => formData[field as keyof typeof formData]
+      );
     } else if (clothingType === "shoes") {
       return formData.footLength && formData.footWidth;
     }
@@ -256,9 +352,12 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
 
   const getIcon = () => {
     switch (clothingType) {
-      case "shirt": return <Shirt className="h-8 w-8 text-white" />;
-      case "pant": return <ShoppingBag className="h-8 w-8 text-white" />;
-      case "shoes": return <Footprints className="h-8 w-8 text-white" />;
+      case "shirt":
+        return <Shirt className="h-8 w-8 text-white" />;
+      case "pant":
+        return <ShoppingBag className="h-8 w-8 text-white" />;
+      case "shoes":
+        return <Footprints className="h-8 w-8 text-white" />;
     }
   };
 
@@ -273,7 +372,8 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
           {getIcon()}
         </div>
         <CardTitle className="text-2xl font-playfair text-gray-800">
-          {clothingType.charAt(0).toUpperCase() + clothingType.slice(1)} Measurement
+          {clothingType.charAt(0).toUpperCase() + clothingType.slice(1)}{" "}
+          Measurement
         </CardTitle>
         <CardDescription className="text-gray-600">
           {gender === "female" ? "Female" : "Male"} sizing parameters
@@ -290,14 +390,21 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
         {currentStep === "personal" && (
           <div className="text-center space-y-8">
             <div className="space-y-3">
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">Basic Information</h2>
+              <h2 className="text-3xl font-bold font-playfair text-gray-800">
+                Basic Information
+              </h2>
               <p className="text-gray-600 text-lg">
                 Tell us about yourself for accurate sizing
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
               <div className="space-y-3">
-                <Label htmlFor="age" className="text-lg font-medium text-gray-700">Age</Label>
+                <Label
+                  htmlFor="age"
+                  className="text-lg font-medium text-gray-700"
+                >
+                  Age
+                </Label>
                 <Input
                   id="age"
                   type="number"
@@ -310,7 +417,12 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                 />
               </div>
               <div className="space-y-3">
-                <Label htmlFor="height" className="text-lg font-medium text-gray-700">Height (cm)</Label>
+                <Label
+                  htmlFor="height"
+                  className="text-lg font-medium text-gray-700"
+                >
+                  Height (cm)
+                </Label>
                 <Input
                   id="height"
                   type="number"
@@ -321,7 +433,12 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                 />
               </div>
               <div className="space-y-3">
-                <Label htmlFor="weight" className="text-lg font-medium text-gray-700">Weight (kg)</Label>
+                <Label
+                  htmlFor="weight"
+                  className="text-lg font-medium text-gray-700"
+                >
+                  Weight (kg)
+                </Label>
                 <Input
                   id="weight"
                   type="number"
@@ -338,7 +455,9 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
         {currentStep === "morphology" && (
           <div className="text-center space-y-8">
             <div className="space-y-3">
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">Body Type</h2>
+              <h2 className="text-3xl font-bold font-playfair text-gray-800">
+                Body Type
+              </h2>
               <p className="text-gray-600 text-lg">
                 Choose the body shape that best describes you
               </p>
@@ -360,8 +479,12 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                       className="sr-only"
                     />
                     <div className="text-4xl">{option.icon}</div>
-                    <span className="font-semibold text-lg text-gray-800">{option.label}</span>
-                    <span className="text-sm text-gray-600 text-center">{option.description}</span>
+                    <span className="font-semibold text-lg text-gray-800">
+                      {option.label}
+                    </span>
+                    <span className="text-sm text-gray-600 text-center">
+                      {option.description}
+                    </span>
                   </Label>
                 </div>
               ))}
@@ -372,14 +495,18 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
         {currentStep === "fit" && (
           <div className="text-center space-y-8">
             <div className="space-y-3">
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">Preferred Fit</h2>
+              <h2 className="text-3xl font-bold font-playfair text-gray-800">
+                Preferred Fit
+              </h2>
               <p className="text-gray-600 text-lg">
                 How would you like your {clothingType} to fit?
               </p>
             </div>
             <RadioGroup
               value={formData.fitPreference}
-              onValueChange={(value) => handleInputChange("fitPreference", value)}
+              onValueChange={(value) =>
+                handleInputChange("fitPreference", value)
+              }
               className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
             >
               {getFitOptions().map((option) => (
@@ -393,9 +520,19 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                       id={`fit-${option.id}`}
                       className="sr-only"
                     />
-                    <div className="text-3xl">{clothingType === "shirt" ? "👕" : clothingType === "pant" ? "👖" : "👟"}</div>
-                    <span className="font-semibold text-xl text-gray-800">{option.label}</span>
-                    <span className="text-sm text-gray-600">{option.description}</span>
+                    <div className="text-3xl">
+                      {clothingType === "shirt"
+                        ? "👕"
+                        : clothingType === "pant"
+                        ? "👖"
+                        : "👟"}
+                    </div>
+                    <span className="font-semibold text-xl text-gray-800">
+                      {option.label}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      {option.description}
+                    </span>
                   </Label>
                 </div>
               ))}
@@ -406,7 +543,9 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
         {currentStep === "chestType" && clothingType === "shirt" && (
           <div className="space-y-8">
             <div className="text-center space-y-3">
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">Chest Type & Measurement</h2>
+              <h2 className="text-3xl font-bold font-playfair text-gray-800">
+                Chest Type & Measurement
+              </h2>
               <p className="text-gray-600 text-lg">
                 Choose your chest type and enter your precise measurement
               </p>
@@ -415,10 +554,14 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
             <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
               {/* Chest Type Selection */}
               <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-gray-800 text-center">What's Your Chest Type?</h3>
+                <h3 className="text-xl font-semibold text-gray-800 text-center">
+                  What's Your Chest Type?
+                </h3>
                 <RadioGroup
                   value={formData.chestType}
-                  onValueChange={(value) => handleInputChange("chestType", value)}
+                  onValueChange={(value) =>
+                    handleInputChange("chestType", value)
+                  }
                   className="grid grid-cols-2 gap-4"
                 >
                   {getChestTypes().map((option) => (
@@ -433,9 +576,15 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                           className="sr-only"
                         />
                         <div className="text-3xl">{option.icon}</div>
-                        <span className="font-semibold text-base text-gray-800">{option.label}</span>
-                        <span className="text-xs text-gray-600 text-center">{option.description}</span>
-                        <span className="text-xs text-blue-600 font-medium">{option.range}</span>
+                        <span className="font-semibold text-base text-gray-800">
+                          {option.label}
+                        </span>
+                        <span className="text-xs text-gray-600 text-center">
+                          {option.description}
+                        </span>
+                        <span className="text-xs text-blue-600 font-medium">
+                          {option.range}
+                        </span>
                       </Label>
                     </div>
                   ))}
@@ -444,18 +593,26 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
 
               {/* Chest Measurement */}
               <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-gray-800 text-center">Enter Your Measurement</h3>
-                
+                <h3 className="text-xl font-semibold text-gray-800 text-center">
+                  Enter Your Measurement
+                </h3>
+
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
                   <h4 className="font-semibold text-blue-800 mb-4 flex items-center gap-2">
                     <Ruler className="h-5 w-5" />
                     How to Measure Your Chest
                   </h4>
                   <ul className="text-sm text-blue-700 space-y-2 mb-6">
-                    <li>• Wrap tape measure around the fullest part of your chest</li>
+                    <li>
+                      • Wrap tape measure around the fullest part of your chest
+                    </li>
                     <li>• Keep the tape parallel to the floor</li>
-                    <li>• Breathe normally and don't pull the tape too tight</li>
-                    <li>• Take measurement over light clothing or undergarments</li>
+                    <li>
+                      • Breathe normally and don't pull the tape too tight
+                    </li>
+                    <li>
+                      • Take measurement over light clothing or undergarments
+                    </li>
                   </ul>
                   <p className="text-xs text-blue-600 mt-3 font-medium">
                     📊 Expected range for {gender}: {getChestSizeRange()}
@@ -463,7 +620,12 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="chest" className="text-lg font-medium text-gray-700">Chest Circumference (cm) *</Label>
+                  <Label
+                    htmlFor="chest"
+                    className="text-lg font-medium text-gray-700"
+                  >
+                    Chest Circumference (cm) *
+                  </Label>
                   <Input
                     id="chest"
                     type="number"
@@ -477,11 +639,15 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                 </div>
 
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-800 mb-2">⚠️ Important Disclaimer</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">
+                    ⚠️ Important Disclaimer
+                  </h4>
                   <p className="text-sm text-gray-600">
-                    Size recommendations are based on standard measurements. Individual fit may vary depending on body shape, 
-                    fabric, and personal preference. We recommend trying on garments when possible or consulting size guides 
-                    provided by specific brands.
+                    Size recommendations are based on standard measurements.
+                    Individual fit may vary depending on body shape, fabric, and
+                    personal preference. We recommend trying on garments when
+                    possible or consulting size guides provided by specific
+                    brands.
                   </p>
                 </div>
               </div>
@@ -492,110 +658,157 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
         {currentStep === "measurements" && clothingType === "pant" && (
           <div className="space-y-8">
             <div className="text-center space-y-3">
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">Pant Measurements</h2>
+              <h2 className="text-3xl font-bold font-playfair text-gray-800">
+                Pant Measurements
+              </h2>
               <p className="text-gray-600 text-lg">
                 Enter your precise measurements for the perfect fit
               </p>
             </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                <div className="space-y-3">
-                  <Label htmlFor="waist" className="text-lg font-medium text-gray-700">Waist (cm) *</Label>
-                  <Input
-                    id="waist"
-                    type="number"
-                    placeholder="e.g. 32"
-                    value={formData.waist}
-                    onChange={(e) => handleInputChange("waist", e.target.value)}
-                    className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="hip" className="text-lg font-medium text-gray-700">Hip (cm) *</Label>
-                  <Input
-                    id="hip"
-                    type="number"
-                    placeholder="e.g. 38"
-                    value={formData.hip}
-                    onChange={(e) => handleInputChange("hip", e.target.value)}
-                    className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="inseam" className="text-lg font-medium text-gray-700">Inseam (cm) *</Label>
-                  <Input
-                    id="inseam"
-                    type="number"
-                    placeholder="e.g. 32"
-                    value={formData.inseam}
-                    onChange={(e) => handleInputChange("inseam", e.target.value)}
-                    className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
-                  />
-                </div>
-                {gender === "female" && (
-                  <div className="space-y-3">
-                    <Label htmlFor="hipCircumference" className="text-lg font-medium text-gray-700">Hip Circumference (cm) *</Label>
-                    <Input
-                      id="hipCircumference"
-                      type="number"
-                      placeholder="e.g. 95"
-                      value={formData.hipCircumference}
-                      onChange={(e) => handleInputChange("hipCircumference", e.target.value)}
-                      className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
-                    />
-                  </div>
-                )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div className="space-y-3">
+                <Label
+                  htmlFor="waist"
+                  className="text-lg font-medium text-gray-700"
+                >
+                  Waist (cm) *
+                </Label>
+                <Input
+                  id="waist"
+                  type="number"
+                  placeholder="e.g. 32"
+                  value={formData.waist}
+                  onChange={(e) => handleInputChange("waist", e.target.value)}
+                  className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                />
               </div>
+              <div className="space-y-3">
+                <Label
+                  htmlFor="hip"
+                  className="text-lg font-medium text-gray-700"
+                >
+                  Hip (cm) *
+                </Label>
+                <Input
+                  id="hip"
+                  type="number"
+                  placeholder="e.g. 38"
+                  value={formData.hip}
+                  onChange={(e) => handleInputChange("hip", e.target.value)}
+                  className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                />
+              </div>
+              <div className="space-y-3">
+                <Label
+                  htmlFor="inseam"
+                  className="text-lg font-medium text-gray-700"
+                >
+                  Inseam (cm) *
+                </Label>
+                <Input
+                  id="inseam"
+                  type="number"
+                  placeholder="e.g. 32"
+                  value={formData.inseam}
+                  onChange={(e) => handleInputChange("inseam", e.target.value)}
+                  className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                />
+              </div>
+              {gender === "female" && (
+                <div className="space-y-3">
+                  <Label
+                    htmlFor="hipCircumference"
+                    className="text-lg font-medium text-gray-700"
+                  >
+                    Hip Circumference (cm) *
+                  </Label>
+                  <Input
+                    id="hipCircumference"
+                    type="number"
+                    placeholder="e.g. 95"
+                    value={formData.hipCircumference}
+                    onChange={(e) =>
+                      handleInputChange("hipCircumference", e.target.value)
+                    }
+                    className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {currentStep === "measurements" && clothingType === "shoes" && (
           <div className="space-y-8">
             <div className="text-center space-y-3">
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">Shoe Measurements</h2>
+              <h2 className="text-3xl font-bold font-playfair text-gray-800">
+                Shoe Measurements
+              </h2>
               <p className="text-gray-600 text-lg">
                 Enter your precise foot measurements for the perfect fit
               </p>
             </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                <div className="space-y-3">
-                  <Label htmlFor="footLength" className="text-lg font-medium text-gray-700">Foot Length (cm) *</Label>
-                  <Input
-                    id="footLength"
-                    type="number"
-                    placeholder="e.g. 26"
-                    value={formData.footLength}
-                    onChange={(e) => handleInputChange("footLength", e.target.value)}
-                    className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="footWidth" className="text-lg font-medium text-gray-700">Foot Width (cm) *</Label>
-                  <Input
-                    id="footWidth"
-                    type="number"
-                    placeholder="e.g. 10"
-                    value={formData.footWidth}
-                    onChange={(e) => handleInputChange("footWidth", e.target.value)}
-                    className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-3 md:col-span-2">
-                  <Label htmlFor="archHeight" className="text-lg font-medium text-gray-700">Arch Height (optional)</Label>
-                  <Select
-                    value={formData.archHeight}
-                    onValueChange={(value) => handleInputChange("archHeight", value)}
-                  >
-                    <SelectTrigger className="h-14 text-lg border-2 border-blue-200 focus:border-blue-500">
-                      <SelectValue placeholder="Select arch height" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low Arch</SelectItem>
-                      <SelectItem value="normal">Normal Arch</SelectItem>
-                      <SelectItem value="high">High Arch</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div className="space-y-3">
+                <Label
+                  htmlFor="footLength"
+                  className="text-lg font-medium text-gray-700"
+                >
+                  Foot Length (cm) *
+                </Label>
+                <Input
+                  id="footLength"
+                  type="number"
+                  placeholder="e.g. 26"
+                  value={formData.footLength}
+                  onChange={(e) =>
+                    handleInputChange("footLength", e.target.value)
+                  }
+                  className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                />
               </div>
+              <div className="space-y-3">
+                <Label
+                  htmlFor="footWidth"
+                  className="text-lg font-medium text-gray-700"
+                >
+                  Foot Width (cm) *
+                </Label>
+                <Input
+                  id="footWidth"
+                  type="number"
+                  placeholder="e.g. 10"
+                  value={formData.footWidth}
+                  onChange={(e) =>
+                    handleInputChange("footWidth", e.target.value)
+                  }
+                  className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                />
+              </div>
+              <div className="space-y-3 md:col-span-2">
+                <Label
+                  htmlFor="archHeight"
+                  className="text-lg font-medium text-gray-700"
+                >
+                  Arch Height (optional)
+                </Label>
+                <Select
+                  value={formData.archHeight}
+                  onValueChange={(value) =>
+                    handleInputChange("archHeight", value)
+                  }
+                >
+                  <SelectTrigger className="h-14 text-lg border-2 border-blue-200 focus:border-blue-500">
+                    <SelectValue placeholder="Select arch height" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low Arch</SelectItem>
+                    <SelectItem value="normal">Normal Arch</SelectItem>
+                    <SelectItem value="high">High Arch</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
         )}
 
@@ -603,15 +816,21 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
           <div className="text-center space-y-8">
             <div className="space-y-3">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">Size Recommendation</h2>
+              <h2 className="text-3xl font-bold font-playfair text-gray-800">
+                Size Recommendation
+              </h2>
               <p className="text-gray-600 text-lg">
                 Based on your measurements and preferences
               </p>
             </div>
 
             <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-xl p-8 max-w-md mx-auto">
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">Recommended Size</h3>
-              <div className="text-6xl font-bold text-green-600 mb-4">{formData.recommendedSize}</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                Recommended Size
+              </h3>
+              <div className="text-6xl font-bold text-green-600 mb-4">
+                {formData.recommendedSize}
+              </div>
               <div className="space-y-2 text-sm text-gray-600">
                 <p>Chest: {formData.chest} cm</p>
                 <p>Body Type: {formData.morphology}</p>
@@ -620,13 +839,27 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-2xl mx-auto">
-              <h4 className="font-semibold text-blue-800 mb-3">📝 Size Calculation Details</h4>
+              <h4 className="font-semibold text-blue-800 mb-3">
+                📝 Size Calculation Details
+              </h4>
               <div className="text-sm text-blue-700 space-y-1">
-                <p>• Base size from chest measurement: {getSizeFromChest(parseInt(formData.chest))}</p>
-                {formData.morphology === "broad" && <p>• +1 size for broad body type</p>}
-                {formData.fitPreference === "loose" && <p>• +1 size for loose fit preference</p>}
-                {formData.fitPreference === "slim" && <p>• -1 size for slim fit preference</p>}
-                <p>• Final recommended size: <strong>{formData.recommendedSize}</strong></p>
+                <p>
+                  • Base size from chest measurement:{" "}
+                  {getSizeFromChest(parseInt(formData.chest))}
+                </p>
+                {formData.morphology === "broad" && (
+                  <p>• +1 size for broad body type</p>
+                )}
+                {formData.fitPreference === "loose" && (
+                  <p>• +1 size for loose fit preference</p>
+                )}
+                {formData.fitPreference === "slim" && (
+                  <p>• -1 size for slim fit preference</p>
+                )}
+                <p>
+                  • Final recommended size:{" "}
+                  <strong>{formData.recommendedSize}</strong>
+                </p>
               </div>
             </div>
           </div>
