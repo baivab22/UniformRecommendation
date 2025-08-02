@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
-import { Ruler, ArrowLeft, User, Shirt, ShoppingBag, Footprints, CheckCircle } from "lucide-react";
+import { Ruler, ArrowLeft, User, Shirt, ShoppingBag, Footprints } from "lucide-react";
 
 type Props = {
   clothingType: "shirt" | "pant" | "shoes";
@@ -26,7 +26,7 @@ type Props = {
   onSubmit: (data: any) => void;
 };
 
-type MeasurementStep = "personal" | "morphology" | "fit" | "chestType" | "measurements" | "recommendation";
+type MeasurementStep = "personal" | "morphology" | "fit" | "chestType" | "measurements";
 
 const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
   const [currentStep, setCurrentStep] = useState<MeasurementStep>("personal");
@@ -58,7 +58,7 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
 
   const getSteps = (): MeasurementStep[] => {
     if (clothingType === "shirt") {
-      return ["personal", "morphology", "fit", "chestType", "measurements", "recommendation"];
+      return ["personal", "morphology", "fit", "chestType", "measurements"];
     } else {
       return ["personal", "morphology", "fit", "measurements"];
     }
@@ -197,18 +197,18 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
   const handleNext = () => {
     const currentIndex = steps.indexOf(currentStep);
     
-    if (currentStep === "measurements" && clothingType === "shirt") {
-      // Calculate recommended size
-      const chestSize = parseInt(formData.chest);
-      if (chestSize) {
-        const baseSize = getSizeFromChest(chestSize);
-        const adjustedSize = getAdjustedSize(baseSize);
-        setFormData(prev => ({ ...prev, recommendedSize: adjustedSize }));
-      }
-      setCurrentStep("recommendation");
-    } else if (currentIndex < steps.length - 1) {
+    if (currentIndex < steps.length - 1) {
       setCurrentStep(steps[currentIndex + 1]);
     } else {
+      // Calculate recommended size for shirt before submitting
+      if (clothingType === "shirt") {
+        const chestSize = parseInt(formData.chest);
+        if (chestSize) {
+          const baseSize = getSizeFromChest(chestSize);
+          const adjustedSize = getAdjustedSize(baseSize);
+          setFormData(prev => ({ ...prev, recommendedSize: adjustedSize }));
+        }
+      }
       onSubmit(formData);
     }
   };
@@ -232,8 +232,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
         return clothingType !== "shirt" || (formData.chestType !== "" && formData.chest !== "");
       case "measurements":
         return validateMeasurements();
-      case "recommendation":
-        return true;
       default:
         return false;
     }
@@ -599,38 +597,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
           </div>
         )}
 
-        {currentStep === "recommendation" && clothingType === "shirt" && (
-          <div className="text-center space-y-8">
-            <div className="space-y-3">
-              <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">Size Recommendation</h2>
-              <p className="text-gray-600 text-lg">
-                Based on your measurements and preferences
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-xl p-8 max-w-md mx-auto">
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">Recommended Size</h3>
-              <div className="text-6xl font-bold text-green-600 mb-4">{formData.recommendedSize}</div>
-              <div className="space-y-2 text-sm text-gray-600">
-                <p>Chest: {formData.chest} cm</p>
-                <p>Body Type: {formData.morphology}</p>
-                <p>Fit Preference: {formData.fitPreference}</p>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-2xl mx-auto">
-              <h4 className="font-semibold text-blue-800 mb-3">📝 Size Calculation Details</h4>
-              <div className="text-sm text-blue-700 space-y-1">
-                <p>• Base size from chest measurement: {getSizeFromChest(parseInt(formData.chest))}</p>
-                {formData.morphology === "broad" && <p>• +1 size for broad body type</p>}
-                {formData.fitPreference === "loose" && <p>• +1 size for loose fit preference</p>}
-                {formData.fitPreference === "slim" && <p>• -1 size for slim fit preference</p>}
-                <p>• Final recommended size: <strong>{formData.recommendedSize}</strong></p>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="flex justify-between pt-8 border-t border-blue-100">
           {currentStepIndex > 0 && (
@@ -649,9 +615,7 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
             disabled={!canProceed()}
             className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 ml-auto"
           >
-            {currentStep === "recommendation"
-              ? "Continue to Personal Info"
-              : currentStepIndex === steps.length - 1
+            {currentStepIndex === steps.length - 1
               ? "Continue to Personal Info"
               : "Continue"}
           </Button>
