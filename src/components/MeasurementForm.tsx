@@ -70,13 +70,7 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
 
   const getSteps = (): MeasurementStep[] => {
     if (clothingType === "shirt") {
-      return [
-        "personal",
-        "fit",
-        "chestType",
-        "measurements",
-        "recommendation",
-      ];
+      return ["personal", "fit", "chestType", "measurements", "recommendation"];
     } else {
       return ["personal", "fit", "measurements"];
     }
@@ -92,6 +86,8 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     height: number,
     gender: "male" | "female"
   ): string => {
+    console.log(chestSize, weight, height, gender, "all data value");
+
     const sizeChart = [
       { maleSize: "3XS", min: 70, max: 75, femaleSize: "L" },
       { maleSize: "2XS", min: 75, max: 80, femaleSize: "XL" },
@@ -148,7 +144,7 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     // Adjust for fit preference
     let adjustment = 0;
     if (formData.fitPreference === "loose") adjustment += 1;
-    if (formData.fitPreference === "slim") adjustment -= 1;
+    // if (formData.fitPreference === "slim") adjustment -= 1;
 
     const newIndex = Math.max(
       0,
@@ -156,7 +152,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     );
     return sizes[newIndex];
   };
-
 
   const getFitOptions = () => {
     const baseOptions = [
@@ -250,7 +245,7 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
       }
       setCurrentStep("recommendation");
     } else if (currentIndex < steps.length - 1) {
-      if (currentIndex === 3) {
+      if (currentIndex === 2) {
         if (chestSize) {
           const weight = parseFloat(formData.weight);
           const height = parseFloat(formData.height);
@@ -413,7 +408,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
           </div>
         )}
 
-
         {currentStep === "fit" && (
           <div className="text-center space-y-8">
             <div className="space-y-3">
@@ -453,14 +447,22 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                         ? "👖"
                         : "👟"}
                     </div>
-                    <span className={`font-semibold text-xl ${
-                      formData.fitPreference === option.id ? "text-blue-800" : "text-gray-800"
-                    }`}>
+                    <span
+                      className={`font-semibold text-xl ${
+                        formData.fitPreference === option.id
+                          ? "text-blue-800"
+                          : "text-gray-800"
+                      }`}
+                    >
                       {option.label}
                     </span>
-                    <span className={`text-sm ${
-                      formData.fitPreference === option.id ? "text-blue-700" : "text-gray-600"
-                    }`}>
+                    <span
+                      className={`text-sm ${
+                        formData.fitPreference === option.id
+                          ? "text-blue-700"
+                          : "text-gray-600"
+                      }`}
+                    >
                       {option.description}
                     </span>
                   </Label>
@@ -510,14 +512,22 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                           className="sr-only"
                         />
                         <div className="text-3xl">{option.icon}</div>
-                        <span className={`font-semibold text-base ${
-                          formData.chestType === option.id ? "text-blue-800" : "text-gray-800"
-                        }`}>
+                        <span
+                          className={`font-semibold text-base ${
+                            formData.chestType === option.id
+                              ? "text-blue-800"
+                              : "text-gray-800"
+                          }`}
+                        >
                           {option.label}
                         </span>
-                        <span className={`text-xs text-center ${
-                          formData.chestType === option.id ? "text-blue-700" : "text-gray-600"
-                        }`}>
+                        <span
+                          className={`text-xs text-center ${
+                            formData.chestType === option.id
+                              ? "text-blue-700"
+                              : "text-gray-600"
+                          }`}
+                        >
                           {option.description}
                         </span>
                         <span className="text-xs text-blue-600 font-medium">
@@ -562,7 +572,7 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                     htmlFor="chest"
                     className="text-lg font-medium text-gray-700"
                   >
-                    Chest Circumference (cm) *
+                    Chest Size (cm) *
                   </Label>
                   <Input
                     id="chest"
