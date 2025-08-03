@@ -36,7 +36,6 @@ type Props = {
 
 type MeasurementStep =
   | "personal"
-  | "morphology"
   | "fit"
   | "chestType"
   | "measurements"
@@ -48,7 +47,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     age: "",
     height: "",
     weight: "",
-    morphology: "",
     fitPreference: "",
     chestType: "",
     // Shirt specific
@@ -74,14 +72,13 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     if (clothingType === "shirt") {
       return [
         "personal",
-        "morphology",
         "fit",
         "chestType",
         "measurements",
         "recommendation",
       ];
     } else {
-      return ["personal", "morphology", "fit", "measurements"];
+      return ["personal", "fit", "measurements"];
     }
   };
 
@@ -148,9 +145,8 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
 
     const currentIndex = sizes.indexOf(baseSize);
 
-    // Adjust for body type
+    // Adjust for fit preference
     let adjustment = 0;
-    if (formData.morphology === "broad") adjustment += 1;
     if (formData.fitPreference === "loose") adjustment += 1;
     if (formData.fitPreference === "slim") adjustment -= 1;
 
@@ -161,53 +157,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     return sizes[newIndex];
   };
 
-  const getMorphologyOptions = () => {
-    if (gender === "female") {
-      return [
-        {
-          id: "petite",
-          label: "Petite",
-          icon: "👩‍🦱",
-          description: "Small frame",
-        },
-        {
-          id: "curvy",
-          label: "Curvy",
-          icon: "👩",
-          description: "Defined waist",
-        },
-        {
-          id: "athletic",
-          label: "Athletic",
-          icon: "🏃‍♀️",
-          description: "Sporty build",
-        },
-        {
-          id: "plus",
-          label: "Plus Size",
-          icon: "👩‍🦳",
-          description: "Fuller figure",
-        },
-      ];
-    } else {
-      return [
-        { id: "slim", label: "Slim", icon: "👤", description: "Lean build" },
-        {
-          id: "athletic",
-          label: "Athletic",
-          icon: "💪",
-          description: "Muscular",
-        },
-        {
-          id: "regular",
-          label: "Regular",
-          icon: "🧍",
-          description: "Average build",
-        },
-        { id: "broad", label: "Broad", icon: "🫃", description: "Wide frame" },
-      ];
-    }
-  };
 
   const getFitOptions = () => {
     const baseOptions = [
@@ -329,8 +278,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     switch (currentStep) {
       case "personal":
         return formData.age && formData.height && formData.weight;
-      case "morphology":
-        return formData.morphology !== "";
       case "fit":
         return formData.fitPreference !== "";
       case "chestType":
@@ -466,53 +413,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
           </div>
         )}
 
-        {currentStep === "morphology" && (
-          <div className="text-center space-y-8">
-            <div className="space-y-3">
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">
-                Body Type
-              </h2>
-              <p className="text-gray-600 text-lg">
-                Choose the body shape that best describes you
-              </p>
-            </div>
-            <RadioGroup
-              value={formData.morphology}
-              onValueChange={(value) => handleInputChange("morphology", value)}
-              className="grid grid-cols-2 md:grid-cols-4 gap-6"
-            >
-              {getMorphologyOptions().map((option) => (
-                <div key={option.id} className="flex flex-col items-center">
-                  <Label
-                    htmlFor={option.id}
-                    className={`cursor-pointer border-2 rounded-xl p-6 transition-all duration-300 flex flex-col items-center space-y-3 w-full transform hover:scale-105 ${
-                      formData.morphology === option.id
-                        ? "border-blue-500 bg-blue-100 shadow-lg"
-                        : "border-blue-200 hover:bg-blue-50 hover:border-blue-400"
-                    }`}
-                  >
-                    <RadioGroupItem
-                      value={option.id}
-                      id={option.id}
-                      className="sr-only"
-                    />
-                    <div className="text-4xl">{option.icon}</div>
-                    <span className={`font-semibold text-lg ${
-                      formData.morphology === option.id ? "text-blue-800" : "text-gray-800"
-                    }`}>
-                      {option.label}
-                    </span>
-                    <span className={`text-sm text-center ${
-                      formData.morphology === option.id ? "text-blue-700" : "text-gray-600"
-                    }`}>
-                      {option.description}
-                    </span>
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-        )}
 
         {currentStep === "fit" && (
           <div className="text-center space-y-8">
@@ -871,7 +771,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
               </div>
               <div className="space-y-2 text-sm text-gray-600">
                 <p>Chest: {formData.chest} cm</p>
-                <p>Body Type: {formData.morphology}</p>
                 <p>Fit Preference: {formData.fitPreference}</p>
               </div>
             </div>
@@ -890,9 +789,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                     gender
                   )}
                 </p>
-                {formData.morphology === "broad" && (
-                  <p>• +1 size for broad body type</p>
-                )}
                 {formData.fitPreference === "loose" && (
                   <p>• +1 size for loose fit preference</p>
                 )}
