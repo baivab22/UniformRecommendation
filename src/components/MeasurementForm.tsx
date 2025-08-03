@@ -89,8 +89,12 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
   const currentStepIndex = steps.indexOf(currentStep);
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
-  const getSizeFromChest = (chestSize: number): string => {
-    // Size chart based on provided image
+  const getSizeFromChest = (
+    chestSize: number,
+    weight: number,
+    height: number,
+    gender: "male" | "female"
+  ): string => {
     const sizeChart = [
       { maleSize: "3XS", min: 70, max: 75, femaleSize: "L" },
       { maleSize: "2XS", min: 75, max: 80, femaleSize: "XL" },
@@ -99,28 +103,41 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
       { maleSize: "M", min: 95, max: 105, femaleSize: "4XL" },
     ];
 
-    // Filter based on gender
-    // const availableSizes =
-    //   gender === "male"
-    //     ? sizeChart.filter((s) =>
-    //         ["3XS", "2XS", "XS", "S", "M"].includes(s.size)
-    //       )
-    //     : sizeChart.filter((s) =>
-    //         ["L", "XL", "2XL", "3XL", "4XL"].includes(s.size)
-    //       );
+    // BMI Calculation
+    const heightInMeters = height / 100;
+    const bmi = weight / (heightInMeters * heightInMeters);
 
-    for (const size of sizeChart) {
-      if (chestSize >= size.min && chestSize <= size.max) {
-        return gender === "male" ? size.maleSize : size.femaleSize;
-      }
+    // BMI Category (based on WHO chart)
+    let bmiCategory:
+      | "underweight"
+      | "normal"
+      | "overweight"
+      | "obese"
+      | "extremely obese";
+
+    if (bmi < 18.5) bmiCategory = "underweight";
+    else if (bmi < 25) bmiCategory = "normal";
+    else if (bmi < 30) bmiCategory = "overweight";
+    else if (bmi < 35) bmiCategory = "obese";
+    else bmiCategory = "extremely obese";
+
+    // Find size index based on chestSize
+    let index = sizeChart.findIndex(
+      (size) => chestSize >= size.min && chestSize <= size.max
+    );
+
+    // Fallback if chestSize is out of defined range
+    if (index === -1) index = chestSize < 70 ? 0 : sizeChart.length - 1;
+
+    // Adjust size if person is obese or extremely obese
+    if (bmiCategory === "obese" || bmiCategory === "extremely obese") {
+      index = Math.min(index + 1, sizeChart.length - 1); // avoid overflow
     }
 
-    // If no exact match, find closest
-    if (gender === "male") {
-      return chestSize < 70 ? "3XS" : chestSize > 105 ? "M" : "XS";
-    } else {
-      return chestSize < 70 ? "L" : chestSize > 105 ? "4XL" : "2XL";
-    }
+    // Return size based on gender
+    return gender === "male"
+      ? sizeChart[index].maleSize
+      : sizeChart[index].femaleSize;
   };
 
   const getAdjustedSize = (baseSize: string): string => {
@@ -275,22 +292,20 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     const chestSize = parseInt(formData.chest);
     if (currentStep === "measurements" && clothingType === "shirt") {
       // Calculate recommended size
-
       if (chestSize) {
-        const baseSize = getSizeFromChest(chestSize);
+        const weight = parseFloat(formData.weight);
+        const height = parseFloat(formData.height);
+        const baseSize = getSizeFromChest(chestSize, weight, height, gender);
         const adjustedSize = getAdjustedSize(baseSize);
         setFormData((prev) => ({ ...prev, recommendedSize: adjustedSize }));
       }
       setCurrentStep("recommendation");
     } else if (currentIndex < steps.length - 1) {
       if (currentIndex === 3) {
-        // setCurrentStep("measurements");
-        // onSubmit(formData);
-        // setCurrentStep("recommendation");
-        // setCurrentStep("measurements");
-
         if (chestSize) {
-          const baseSize = getSizeFromChest(chestSize);
+          const weight = parseFloat(formData.weight);
+          const height = parseFloat(formData.height);
+          const baseSize = getSizeFromChest(chestSize, weight, height, gender);
           const adjustedSize = getAdjustedSize(baseSize);
           setFormData((prev) => ({ ...prev, recommendedSize: adjustedSize }));
         }
@@ -299,7 +314,6 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
         setCurrentStep(steps[currentIndex + 1]);
       }
     } else {
-      console.log("hi consoleeee");
       onSubmit(formData);
     }
   };
@@ -471,7 +485,11 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                 <div key={option.id} className="flex flex-col items-center">
                   <Label
                     htmlFor={option.id}
-                    className="cursor-pointer border-2 border-blue-200 rounded-xl p-6 hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 flex flex-col items-center space-y-3 w-full transform hover:scale-105"
+                    className={`cursor-pointer border-2 rounded-xl p-6 transition-all duration-300 flex flex-col items-center space-y-3 w-full transform hover:scale-105 ${
+                      formData.morphology === option.id
+                        ? "border-blue-500 bg-blue-100 shadow-lg"
+                        : "border-blue-200 hover:bg-blue-50 hover:border-blue-400"
+                    }`}
                   >
                     <RadioGroupItem
                       value={option.id}
@@ -479,10 +497,14 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                       className="sr-only"
                     />
                     <div className="text-4xl">{option.icon}</div>
-                    <span className="font-semibold text-lg text-gray-800">
+                    <span className={`font-semibold text-lg ${
+                      formData.morphology === option.id ? "text-blue-800" : "text-gray-800"
+                    }`}>
                       {option.label}
                     </span>
-                    <span className="text-sm text-gray-600 text-center">
+                    <span className={`text-sm text-center ${
+                      formData.morphology === option.id ? "text-blue-700" : "text-gray-600"
+                    }`}>
                       {option.description}
                     </span>
                   </Label>
@@ -513,7 +535,11 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                 <div key={option.id} className="flex flex-col items-center">
                   <Label
                     htmlFor={`fit-${option.id}`}
-                    className="cursor-pointer border-2 border-blue-200 rounded-xl p-8 hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 flex flex-col items-center space-y-4 w-full text-center transform hover:scale-105"
+                    className={`cursor-pointer border-2 rounded-xl p-8 transition-all duration-300 flex flex-col items-center space-y-4 w-full text-center transform hover:scale-105 ${
+                      formData.fitPreference === option.id
+                        ? "border-blue-500 bg-blue-100 shadow-lg"
+                        : "border-blue-200 hover:bg-blue-50 hover:border-blue-400"
+                    }`}
                   >
                     <RadioGroupItem
                       value={option.id}
@@ -527,10 +553,14 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                         ? "👖"
                         : "👟"}
                     </div>
-                    <span className="font-semibold text-xl text-gray-800">
+                    <span className={`font-semibold text-xl ${
+                      formData.fitPreference === option.id ? "text-blue-800" : "text-gray-800"
+                    }`}>
                       {option.label}
                     </span>
-                    <span className="text-sm text-gray-600">
+                    <span className={`text-sm ${
+                      formData.fitPreference === option.id ? "text-blue-700" : "text-gray-600"
+                    }`}>
                       {option.description}
                     </span>
                   </Label>
@@ -568,7 +598,11 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                     <div key={option.id}>
                       <Label
                         htmlFor={`chest-${option.id}`}
-                        className="cursor-pointer border-2 border-blue-200 rounded-xl p-4 hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 flex flex-col items-center space-y-2 w-full transform hover:scale-105"
+                        className={`cursor-pointer border-2 rounded-xl p-4 transition-all duration-300 flex flex-col items-center space-y-2 w-full transform hover:scale-105 ${
+                          formData.chestType === option.id
+                            ? "border-blue-500 bg-blue-100 shadow-lg"
+                            : "border-blue-200 hover:bg-blue-50 hover:border-blue-400"
+                        }`}
                       >
                         <RadioGroupItem
                           value={option.id}
@@ -576,10 +610,14 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                           className="sr-only"
                         />
                         <div className="text-3xl">{option.icon}</div>
-                        <span className="font-semibold text-base text-gray-800">
+                        <span className={`font-semibold text-base ${
+                          formData.chestType === option.id ? "text-blue-800" : "text-gray-800"
+                        }`}>
                           {option.label}
                         </span>
-                        <span className="text-xs text-gray-600 text-center">
+                        <span className={`text-xs text-center ${
+                          formData.chestType === option.id ? "text-blue-700" : "text-gray-600"
+                        }`}>
                           {option.description}
                         </span>
                         <span className="text-xs text-blue-600 font-medium">
@@ -845,7 +883,12 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
               <div className="text-sm text-blue-700 space-y-1">
                 <p>
                   • Base size from chest measurement:{" "}
-                  {getSizeFromChest(parseInt(formData.chest))}
+                  {getSizeFromChest(
+                    parseInt(formData.chest),
+                    parseFloat(formData.weight),
+                    parseFloat(formData.height),
+                    gender
+                  )}
                 </p>
                 {formData.morphology === "broad" && (
                   <p>• +1 size for broad body type</p>
