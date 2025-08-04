@@ -36,6 +36,7 @@ type Props = {
 
 type MeasurementStep =
   | "personal"
+  | "morphology"
   | "fit"
   | "chestType"
   | "measurements"
@@ -47,6 +48,7 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     age: "",
     height: "",
     weight: "",
+    morphology: "",
     fitPreference: "",
     chestType: "",
     // Shirt specific
@@ -70,7 +72,7 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
 
   const getSteps = (): MeasurementStep[] => {
     if (clothingType === "shirt") {
-      return ["personal", "fit", "chestType", "measurements", "recommendation"];
+      return ["personal", "morphology", "fit", "chestType", "measurements", "recommendation"];
     } else {
       return ["personal", "fit", "measurements"];
     }
@@ -84,7 +86,8 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     chestSize: number,
     weight: number,
     height: number,
-    gender: "male" | "female"
+    gender: "male" | "female",
+    morphology?: string
   ): string => {
     console.log(chestSize, weight, height, gender, "all data value");
 
@@ -122,8 +125,8 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     // Fallback if chestSize is out of defined range
     if (index === -1) index = chestSize < 70 ? 0 : sizeChart.length - 1;
 
-    // Adjust size if person is obese or extremely obese
-    if (bmiCategory === "obese" || bmiCategory === "extremely obese") {
+    // Adjust size if user selected the larger morphology (last option)
+    if (morphology === "large") {
       index = Math.min(index + 1, sizeChart.length - 1); // avoid overflow
     }
 
@@ -236,20 +239,20 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     const chestSize = parseInt(formData.chest);
     if (currentStep === "measurements" && clothingType === "shirt") {
       // Calculate recommended size
-      if (chestSize) {
-        const weight = parseFloat(formData.weight);
-        const height = parseFloat(formData.height);
-        const baseSize = getSizeFromChest(chestSize, weight, height, gender);
-        const adjustedSize = getAdjustedSize(baseSize);
-        setFormData((prev) => ({ ...prev, recommendedSize: adjustedSize }));
-      }
+        if (chestSize) {
+          const weight = parseFloat(formData.weight);
+          const height = parseFloat(formData.height);
+          const baseSize = getSizeFromChest(chestSize, weight, height, gender, formData.morphology);
+          const adjustedSize = getAdjustedSize(baseSize);
+          setFormData((prev) => ({ ...prev, recommendedSize: adjustedSize }));
+        }
       setCurrentStep("recommendation");
     } else if (currentIndex < steps.length - 1) {
       if (currentIndex === 2) {
         if (chestSize) {
           const weight = parseFloat(formData.weight);
           const height = parseFloat(formData.height);
-          const baseSize = getSizeFromChest(chestSize, weight, height, gender);
+          const baseSize = getSizeFromChest(chestSize, weight, height, gender, formData.morphology);
           const adjustedSize = getAdjustedSize(baseSize);
           setFormData((prev) => ({ ...prev, recommendedSize: adjustedSize }));
         }
@@ -273,6 +276,8 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     switch (currentStep) {
       case "personal":
         return formData.age && formData.height && formData.weight;
+      case "morphology":
+        return formData.morphology !== "";
       case "fit":
         return formData.fitPreference !== "";
       case "chestType":
@@ -405,6 +410,82 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                 />
               </div>
             </div>
+          </div>
+        )}
+
+        {currentStep === "morphology" && clothingType === "shirt" && (
+          <div className="text-center space-y-8">
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold font-playfair text-gray-800">
+                Your Morphology
+              </h2>
+              <p className="text-gray-600 text-lg">
+                Possible shapes for your height & weight:
+              </p>
+            </div>
+            <RadioGroup
+              value={formData.morphology}
+              onValueChange={(value) => handleInputChange("morphology", value)}
+              className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
+            >
+              {[
+                { id: "slim", label: "Slim", description: "Lean build" },
+                { id: "athletic", label: "Athletic", description: "Muscular build" },
+                { id: "average", label: "Average", description: "Standard build" },
+                { id: "large", label: "Fuller", description: "Broader build" },
+              ].map((option) => (
+                <div key={option.id} className="flex flex-col items-center">
+                  <Label
+                    htmlFor={`morphology-${option.id}`}
+                    className={`cursor-pointer border-2 rounded-xl p-6 transition-all duration-300 flex flex-col items-center space-y-4 w-full text-center transform hover:scale-105 ${
+                      formData.morphology === option.id
+                        ? "border-blue-500 bg-blue-100 shadow-lg"
+                        : "border-blue-200 hover:bg-blue-50 hover:border-blue-400"
+                    }`}
+                  >
+                    <RadioGroupItem
+                      value={option.id}
+                      id={`morphology-${option.id}`}
+                      className="sr-only"
+                    />
+                    <div className="w-24 h-32 border border-gray-300 rounded bg-white flex items-end justify-center p-2">
+                      <div 
+                        className={`bg-gray-800 ${
+                          option.id === "slim" ? "w-6 h-24" :
+                          option.id === "athletic" ? "w-8 h-26" :
+                          option.id === "average" ? "w-10 h-24" :
+                          "w-12 h-24"
+                        }`}
+                        style={{
+                          clipPath: option.id === "slim" ? "polygon(40% 0%, 60% 0%, 70% 100%, 30% 100%)" :
+                                   option.id === "athletic" ? "polygon(35% 0%, 65% 0%, 75% 100%, 25% 100%)" :
+                                   option.id === "average" ? "polygon(30% 0%, 70% 0%, 80% 100%, 20% 100%)" :
+                                   "polygon(25% 0%, 75% 0%, 85% 100%, 15% 100%)"
+                        }}
+                      />
+                    </div>
+                    <span
+                      className={`font-semibold text-lg ${
+                        formData.morphology === option.id
+                          ? "text-blue-800"
+                          : "text-gray-800"
+                      }`}
+                    >
+                      {option.label}
+                    </span>
+                    <span
+                      className={`text-sm ${
+                        formData.morphology === option.id
+                          ? "text-blue-700"
+                          : "text-gray-600"
+                      }`}
+                    >
+                      {option.description}
+                    </span>
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
           </div>
         )}
 
@@ -796,7 +877,8 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                     parseInt(formData.chest),
                     parseFloat(formData.weight),
                     parseFloat(formData.height),
-                    gender
+                    gender,
+                    formData.morphology
                   )}
                 </p>
                 {formData.fitPreference === "loose" && (
