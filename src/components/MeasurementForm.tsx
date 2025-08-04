@@ -72,7 +72,14 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
 
   const getSteps = (): MeasurementStep[] => {
     if (clothingType === "shirt") {
-      return ["personal", "morphology", "fit", "chestType", "measurements", "recommendation"];
+      return [
+        "personal",
+        "morphology",
+        "fit",
+        "chestType",
+        "measurements",
+        "recommendation",
+      ];
     } else {
       return ["personal", "fit", "measurements"];
     }
@@ -239,20 +246,32 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
     const chestSize = parseInt(formData.chest);
     if (currentStep === "measurements" && clothingType === "shirt") {
       // Calculate recommended size
-        if (chestSize) {
-          const weight = parseFloat(formData.weight);
-          const height = parseFloat(formData.height);
-          const baseSize = getSizeFromChest(chestSize, weight, height, gender, formData.morphology);
-          const adjustedSize = getAdjustedSize(baseSize);
-          setFormData((prev) => ({ ...prev, recommendedSize: adjustedSize }));
-        }
+      if (chestSize) {
+        const weight = parseFloat(formData.weight);
+        const height = parseFloat(formData.height);
+        const baseSize = getSizeFromChest(
+          chestSize,
+          weight,
+          height,
+          gender,
+          formData.morphology
+        );
+        const adjustedSize = getAdjustedSize(baseSize);
+        setFormData((prev) => ({ ...prev, recommendedSize: adjustedSize }));
+      }
       setCurrentStep("recommendation");
     } else if (currentIndex < steps.length - 1) {
-      if (currentIndex === 2) {
+      if (currentIndex === 3) {
         if (chestSize) {
           const weight = parseFloat(formData.weight);
           const height = parseFloat(formData.height);
-          const baseSize = getSizeFromChest(chestSize, weight, height, gender, formData.morphology);
+          const baseSize = getSizeFromChest(
+            chestSize,
+            weight,
+            height,
+            gender,
+            formData.morphology
+          );
           const adjustedSize = getAdjustedSize(baseSize);
           setFormData((prev) => ({ ...prev, recommendedSize: adjustedSize }));
         }
@@ -430,8 +449,16 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
             >
               {[
                 { id: "slim", label: "Slim", description: "Lean build" },
-                { id: "athletic", label: "Athletic", description: "Muscular build" },
-                { id: "average", label: "Average", description: "Standard build" },
+                {
+                  id: "athletic",
+                  label: "Athletic",
+                  description: "Muscular build",
+                },
+                {
+                  id: "average",
+                  label: "Average",
+                  description: "Standard build",
+                },
                 { id: "large", label: "Fuller", description: "Broader build" },
               ].map((option) => (
                 <div key={option.id} className="flex flex-col items-center">
@@ -449,18 +476,25 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                       className="sr-only"
                     />
                     <div className="w-24 h-32 border border-gray-300 rounded bg-white flex items-end justify-center p-2">
-                      <div 
+                      <div
                         className={`bg-gray-800 ${
-                          option.id === "slim" ? "w-6 h-24" :
-                          option.id === "athletic" ? "w-8 h-26" :
-                          option.id === "average" ? "w-10 h-24" :
-                          "w-12 h-24"
+                          option.id === "slim"
+                            ? "w-6 h-24"
+                            : option.id === "athletic"
+                            ? "w-8 h-26"
+                            : option.id === "average"
+                            ? "w-10 h-24"
+                            : "w-12 h-24"
                         }`}
                         style={{
-                          clipPath: option.id === "slim" ? "polygon(40% 0%, 60% 0%, 70% 100%, 30% 100%)" :
-                                   option.id === "athletic" ? "polygon(35% 0%, 65% 0%, 75% 100%, 25% 100%)" :
-                                   option.id === "average" ? "polygon(30% 0%, 70% 0%, 80% 100%, 20% 100%)" :
-                                   "polygon(25% 0%, 75% 0%, 85% 100%, 15% 100%)"
+                          clipPath:
+                            option.id === "slim"
+                              ? "polygon(40% 0%, 60% 0%, 70% 100%, 30% 100%)"
+                              : option.id === "athletic"
+                              ? "polygon(35% 0%, 65% 0%, 75% 100%, 25% 100%)"
+                              : option.id === "average"
+                              ? "polygon(30% 0%, 70% 0%, 80% 100%, 20% 100%)"
+                              : "polygon(25% 0%, 75% 0%, 85% 100%, 15% 100%)",
                         }}
                       />
                     </div>
