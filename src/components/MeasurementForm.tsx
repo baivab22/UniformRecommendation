@@ -28,6 +28,12 @@ import {
   CheckCircle,
 } from "lucide-react";
 
+// Import morphology images
+import slimMorphology from "/lovable-uploads/80c23089-2483-4d72-b7f1-426457668814.png";
+import averageMorphology from "/lovable-uploads/6dbd9ca7-65f9-4816-8ca5-f9fd2920c129.png";
+import stockyMorphology from "/lovable-uploads/2016f981-07f4-48ca-bced-4ddae6defc0a.png";
+import fullerMorphology from "/lovable-uploads/45bf5c8f-e8fc-4f75-bbfb-834bf999cc60.png";
+
 type Props = {
   clothingType: "shirt" | "pant" | "shoes";
   gender: "male" | "female";
@@ -448,18 +454,20 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
               className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
             >
               {[
-                { id: "slim", label: "Slim", description: "Lean build" },
+                { id: "slim", label: "Slim", description: "Lean build", image: slimMorphology },
                 {
                   id: "athletic",
                   label: "Athletic",
                   description: "Muscular build",
+                  image: averageMorphology,
                 },
                 {
                   id: "average",
                   label: "Average",
                   description: "Standard build",
+                  image: stockyMorphology,
                 },
-                { id: "large", label: "Fuller", description: "Broader build" },
+                { id: "large", label: "Fuller", description: "Broader build", image: fullerMorphology },
               ].map((option) => (
                 <div key={option.id} className="flex flex-col items-center">
                   <Label
@@ -475,27 +483,11 @@ const MeasurementForm = ({ clothingType, gender, onSubmit }: Props) => {
                       id={`morphology-${option.id}`}
                       className="sr-only"
                     />
-                    <div className="w-24 h-32 border border-gray-300 rounded bg-white flex items-end justify-center p-2">
-                      <div
-                        className={`bg-gray-800 ${
-                          option.id === "slim"
-                            ? "w-6 h-24"
-                            : option.id === "athletic"
-                            ? "w-8 h-26"
-                            : option.id === "average"
-                            ? "w-10 h-24"
-                            : "w-12 h-24"
-                        }`}
-                        style={{
-                          clipPath:
-                            option.id === "slim"
-                              ? "polygon(40% 0%, 60% 0%, 70% 100%, 30% 100%)"
-                              : option.id === "athletic"
-                              ? "polygon(35% 0%, 65% 0%, 75% 100%, 25% 100%)"
-                              : option.id === "average"
-                              ? "polygon(30% 0%, 70% 0%, 80% 100%, 20% 100%)"
-                              : "polygon(25% 0%, 75% 0%, 85% 100%, 15% 100%)",
-                        }}
+                    <div className="w-24 h-32 border border-gray-300 rounded bg-white flex items-center justify-center p-2">
+                      <img 
+                        src={option.image} 
+                        alt={`${option.label} body shape`}
+                        className="max-w-full max-h-full object-contain"
                       />
                     </div>
                     <span
