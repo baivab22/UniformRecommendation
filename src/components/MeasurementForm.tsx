@@ -232,35 +232,51 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const calculateSizes = () => {
+  const calculateAllSizes = () => {
     // Calculate shirt size
-    if (formData.chest) {
-      const chestSize = parseInt(formData.chest);
-      const weight = parseFloat(formData.weight);
-      const height = parseFloat(formData.height);
-      const baseShirtSize = getSizeFromChest(
-        chestSize,
-        weight,
-        height,
-        gender,
-        formData.morphology
-      );
-      const adjustedShirtSize = getAdjustedSize(baseShirtSize, formData.shirtFit);
-      
-      setFormData((prev) => ({ 
-        ...prev, 
-        shirtSize: adjustedShirtSize,
-        pantSize: "M", // Placeholder calculation
-        shoeSize: "42" // Placeholder calculation
-      }));
-    }
+    const chestSize = parseInt(formData.chest);
+    const weight = parseFloat(formData.weight);
+    const height = parseFloat(formData.height);
+    const baseShirtSize = getSizeFromChest(
+      chestSize,
+      weight,
+      height,
+      gender,
+      formData.morphology
+    );
+    const adjustedShirtSize = getAdjustedSize(baseShirtSize, formData.shirtFit);
+    
+    // Calculate pant size (simplified calculation based on waist)
+    const waistSize = parseInt(formData.waist);
+    let pantSize = "M";
+    if (waistSize < 30) pantSize = "S";
+    else if (waistSize > 36) pantSize = "L";
+    else pantSize = "M";
+    
+    // Calculate shoe size (simplified calculation based on foot length)
+    const footLength = parseFloat(formData.footLength);
+    let shoeSize = "42";
+    if (footLength < 24) shoeSize = "38";
+    else if (footLength < 25) shoeSize = "39";
+    else if (footLength < 26) shoeSize = "40";
+    else if (footLength < 27) shoeSize = "41";
+    else if (footLength < 28) shoeSize = "42";
+    else if (footLength < 29) shoeSize = "43";
+    else shoeSize = "44";
+    
+    setFormData((prev) => ({ 
+      ...prev, 
+      shirtSize: adjustedShirtSize,
+      pantSize: pantSize,
+      shoeSize: shoeSize
+    }));
   };
 
   const handleNext = () => {
     const currentIndex = steps.indexOf(currentStep);
     
-    if (currentStep === "shirtMeasurements") {
-      calculateSizes();
+    if (currentStep === "shoesMeasurements") {
+      calculateAllSizes();
     }
     
     if (currentIndex < steps.length - 1) {
