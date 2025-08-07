@@ -95,91 +95,6 @@ export const AdminManagement = () => {
     });
   };
 
-  const ManagementCard = ({ 
-    title, 
-    items, 
-    type, 
-    icon: Icon 
-  }: { 
-    title: string; 
-    items: ManagementItem[]; 
-    type: "school" | "college" | "batch";
-    icon: any;
-  }) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <Icon className="h-5 w-5" />
-          {title}
-        </CardTitle>
-        <Dialog 
-          open={dialogOpen === type} 
-          onOpenChange={(open) => {
-            setDialogOpen(open ? type : "");
-            if (!open) setNewItemName(""); // Clear input when closing
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button size="sm" variant="outline">
-              <Plus className="h-4 w-4 mr-1" />
-              Add
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New {title.slice(0, -1)}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor={`${type}-name`}>Name</Label>
-                <Input
-                  id={`${type}-name`}
-                  value={dialogOpen === type ? newItemName : ""}
-                  onChange={(e) => setNewItemName(e.target.value)}
-                  placeholder={`Enter ${type} name`}
-                  autoFocus
-                />
-              </div>
-              <Button 
-                onClick={() => addItem(type)} 
-                className="w-full"
-                disabled={!newItemName.trim()}
-              >
-                Add {title.slice(0, -1)}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2 max-h-60 overflow-y-auto">
-          {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No {title.toLowerCase()} added yet</p>
-          ) : (
-            items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
-                <span className="text-sm font-medium">{item.name}</span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => deleteItem(type, item.id)}
-                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))
-          )}
-        </div>
-        <div className="mt-3 pt-3 border-t">
-          <Badge variant="secondary" className="text-xs">
-            Total: {items.length}
-          </Badge>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -191,24 +106,142 @@ export const AdminManagement = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ManagementCard
+          key="schools"
           title="Schools"
           items={schools}
           type="school"
           icon={School}
+          dialogOpen={dialogOpen}
+          setDialogOpen={setDialogOpen}
+          newItemName={newItemName}
+          setNewItemName={setNewItemName}
+          addItem={addItem}
+          deleteItem={deleteItem}
         />
         <ManagementCard
+          key="colleges"
           title="Colleges"
           items={colleges}
           type="college"
           icon={GraduationCap}
+          dialogOpen={dialogOpen}
+          setDialogOpen={setDialogOpen}
+          newItemName={newItemName}
+          setNewItemName={setNewItemName}
+          addItem={addItem}
+          deleteItem={deleteItem}
         />
         <ManagementCard
+          key="batches"
           title="Batches"
           items={batches}
           type="batch"
           icon={Calendar}
+          dialogOpen={dialogOpen}
+          setDialogOpen={setDialogOpen}
+          newItemName={newItemName}
+          setNewItemName={setNewItemName}
+          addItem={addItem}
+          deleteItem={deleteItem}
         />
       </div>
     </div>
   );
 };
+
+const ManagementCard = ({ 
+  title, 
+  items, 
+  type, 
+  icon: Icon,
+  dialogOpen,
+  setDialogOpen,
+  newItemName,
+  setNewItemName,
+  addItem,
+  deleteItem
+}: { 
+  title: string; 
+  items: ManagementItem[]; 
+  type: "school" | "college" | "batch";
+  icon: any;
+  dialogOpen: string;
+  setDialogOpen: (value: string) => void;
+  newItemName: string;
+  setNewItemName: (value: string) => void;
+  addItem: (type: "school" | "college" | "batch") => void;
+  deleteItem: (type: "school" | "college" | "batch", id: string) => void;
+}) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-lg font-semibold flex items-center gap-2">
+        <Icon className="h-5 w-5" />
+        {title}
+      </CardTitle>
+      <Dialog 
+        open={dialogOpen === type} 
+        onOpenChange={(open) => {
+          setDialogOpen(open ? type : "");
+          if (!open) setNewItemName(""); // Clear input when closing
+        }}
+      >
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            <Plus className="h-4 w-4 mr-1" />
+            Add
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New {title.slice(0, -1)}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor={`${type}-name`}>Name</Label>
+              <Input
+                id={`${type}-name`}
+                value={dialogOpen === type ? newItemName : ""}
+                onChange={(e) => setNewItemName(e.target.value)}
+                placeholder={`Enter ${type} name`}
+                autoFocus
+              />
+            </div>
+            <Button 
+              onClick={() => addItem(type)} 
+              className="w-full"
+              disabled={!newItemName.trim()}
+            >
+              Add {title.slice(0, -1)}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-2 max-h-60 overflow-y-auto">
+        {items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No {title.toLowerCase()} added yet</p>
+        ) : (
+          items.map((item) => (
+            <div key={item.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+              <span className="text-sm font-medium">{item.name}</span>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => deleteItem(type, item.id)}
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))
+        )}
+      </div>
+      <div className="mt-3 pt-3 border-t">
+        <Badge variant="secondary" className="text-xs">
+          Total: {items.length}
+        </Badge>
+      </div>
+    </CardContent>
+  </Card>
+);
