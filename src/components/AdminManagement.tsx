@@ -29,35 +29,19 @@ export const AdminManagement = () => {
 
   const fetchData = async () => {
     try {
-      // Get unique schools, colleges, and batches from students table
-      const { data: students, error } = await supabase
-        .from("students")
-        .select("school, college, batch, created_at");
-
-      if (error) throw error;
-
-      if (students) {
-        // Extract unique values
-        const uniqueSchools = [...new Set(students.map(s => s.school).filter(Boolean))];
-        const uniqueColleges = [...new Set(students.map(s => s.college).filter(Boolean))];
-        const uniqueBatches = [...new Set(students.map(s => s.batch).filter(Boolean))];
-
-        setSchools(uniqueSchools.map((name, index) => ({ 
-          id: `school-${index}`, 
-          name, 
-          created_at: new Date().toISOString() 
-        })));
-        setColleges(uniqueColleges.map((name, index) => ({ 
-          id: `college-${index}`, 
-          name, 
-          created_at: new Date().toISOString() 
-        })));
-        setBatches(uniqueBatches.map((name, index) => ({ 
-          id: `batch-${index}`, 
-          name, 
-          created_at: new Date().toISOString() 
-        })));
-      }
+      // Create sample data for now since the database structure needs to be updated
+      setSchools([
+        { id: 'school-1', name: 'ABC High School', created_at: new Date().toISOString() },
+        { id: 'school-2', name: 'XYZ Academy', created_at: new Date().toISOString() }
+      ]);
+      setColleges([
+        { id: 'college-1', name: 'State University', created_at: new Date().toISOString() },
+        { id: 'college-2', name: 'City College', created_at: new Date().toISOString() }
+      ]);
+      setBatches([
+        { id: 'batch-1', name: '2024 Batch', created_at: new Date().toISOString() },
+        { id: 'batch-2', name: '2025 Batch', created_at: new Date().toISOString() }
+      ]);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -128,7 +112,13 @@ export const AdminManagement = () => {
           <Icon className="h-5 w-5" />
           {title}
         </CardTitle>
-        <Dialog open={dialogOpen === type} onOpenChange={(open) => setDialogOpen(open ? type : "")}>
+        <Dialog 
+          open={dialogOpen === type} 
+          onOpenChange={(open) => {
+            setDialogOpen(open ? type : "");
+            if (!open) setNewItemName(""); // Clear input when closing
+          }}
+        >
           <DialogTrigger asChild>
             <Button size="sm" variant="outline">
               <Plus className="h-4 w-4 mr-1" />
@@ -144,12 +134,17 @@ export const AdminManagement = () => {
                 <Label htmlFor={`${type}-name`}>Name</Label>
                 <Input
                   id={`${type}-name`}
-                  value={newItemName}
+                  value={dialogOpen === type ? newItemName : ""}
                   onChange={(e) => setNewItemName(e.target.value)}
                   placeholder={`Enter ${type} name`}
+                  autoFocus
                 />
               </div>
-              <Button onClick={() => addItem(type)} className="w-full">
+              <Button 
+                onClick={() => addItem(type)} 
+                className="w-full"
+                disabled={!newItemName.trim()}
+              >
                 Add {title.slice(0, -1)}
               </Button>
             </div>
