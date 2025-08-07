@@ -1,8 +1,51 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Ruler, ArrowRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Ruler, ArrowRight, Share2, Copy, QrCode } from "lucide-react";
+import { useState, useRef } from "react";
+import QRCode from "qrcode";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const { toast } = useToast();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const generateQRCode = async () => {
+    const currentUrl = window.location.origin;
+    try {
+      const qrDataUrl = await QRCode.toDataURL(currentUrl, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF"
+        }
+      });
+      setQrCodeUrl(qrDataUrl);
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    const currentUrl = window.location.origin;
+    try {
+      await navigator.clipboard.writeText(currentUrl);
+      toast({
+        title: "Link copied!",
+        description: "The website link has been copied to your clipboard.",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        description: "Please copy the link manually.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/5">
       {/* Simple Navigation */}
@@ -14,9 +57,44 @@ const Index = () => {
             </div>
             <span className="text-2xl font-bold text-foreground">Fit-Find</span>
           </div>
-          <Link to="/admin">
-            <Button variant="outline">Admin Login</Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" onClick={generateQRCode}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Share Fit-Find</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col items-center space-y-4 py-4">
+                  {qrCodeUrl && (
+                    <div className="flex flex-col items-center space-y-2">
+                      <img src={qrCodeUrl} alt="QR Code" className="border rounded-lg" />
+                      <p className="text-sm text-muted-foreground text-center">
+                        Scan QR code to visit Fit-Find
+                      </p>
+                    </div>
+                  )}
+                  <div className="flex w-full items-center space-x-2">
+                    <input
+                      readOnly
+                      value={window.location.origin}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                    />
+                    <Button size="sm" onClick={copyToClipboard}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Link to="/admin">
+              <Button variant="outline">Admin</Button>
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -31,16 +109,18 @@ const Index = () => {
             <p className="text-xl md:text-2xl mb-12 text-primary-foreground/90">
               Get accurate size recommendations for shirts, pants, and shoes using our advanced biometric sizing technology.
             </p>
-            <Button
-              size="lg"
-              className="bg-background text-primary hover:bg-background/90 px-8 py-4 text-lg font-semibold rounded-full shadow-xl"
-              asChild
-            >
-              <Link to="/student-form">
-                <ArrowRight className="h-5 w-5 mr-2" />
-                Start Sizing
-              </Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+              <Button
+                size="lg"
+                className="bg-background text-primary hover:bg-background/90 px-8 py-4 text-lg font-semibold rounded-full shadow-xl"
+                asChild
+              >
+                <Link to="/student-form">
+                  <ArrowRight className="h-5 w-5 mr-2" />
+                  Start Sizing
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>

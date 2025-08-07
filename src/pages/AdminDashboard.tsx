@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { AdminManagement } from "@/components/AdminManagement";
 
 // import {
 //   Card,
@@ -64,14 +65,18 @@ import {
   Download,
   Search,
   LogOut,
+  Settings,
+  BarChart3,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AdminDashboard = () => {
   const [students, setStudents] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCollege, setFilterCollege] = useState("all");
   const [filterBatch, setFilterBatch] = useState("all");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const navigate = useNavigate();
 
   // ✅ Auth check
@@ -146,6 +151,21 @@ const AdminDashboard = () => {
             Logout
           </Button>
         </div>
+
+        {/* Navigation Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="management" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Management
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-6">
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -242,80 +262,92 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Student Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Student Submissions</CardTitle>
-            <CardDescription>
-              Showing {filteredStudents.length} of {students.length} students
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>College</TableHead>
-                    <TableHead>Batch</TableHead>
-                    <TableHead>Gender</TableHead>
-                    <TableHead>Clothing Type</TableHead>
-                    <TableHead>Measurements</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredStudents.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell className="font-medium">
-                        <div>
-                          <div>{student.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {student.email}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{student.college}</TableCell>
-                      <TableCell>{student.batch}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            student.gender === "male" ? "default" : "secondary"
-                          }
-                        >
-                          {student.gender}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{student.clothing_type}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {student.collar_size && (
-                          <div>Collar: {student.collar_size}</div>
-                        )}
-                        {student.chest && <div>Chest: {student.chest}</div>}
-                        {student.waist && <div>Waist: {student.waist}</div>}
-                        {student.hip && <div>Hip: {student.hip}</div>}
-                        {student.shoe_size && (
-                          <div>Shoe: {student.shoe_size}</div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(student.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          View
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+            {/* Student Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Student Submissions</CardTitle>
+                <CardDescription>
+                  Showing {filteredStudents.length} of {students.length} students
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>College</TableHead>
+                        <TableHead>Batch</TableHead>
+                        <TableHead>Gender</TableHead>
+                        <TableHead>Size Recommendations</TableHead>
+                        <TableHead>Measurements</TableHead>
+                        <TableHead>Submitted</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredStudents.map((student) => (
+                        <TableRow key={student.id}>
+                          <TableCell className="font-medium">
+                            <div>
+                              <div>{student.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {student.email}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{student.college}</TableCell>
+                          <TableCell>{student.batch}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                student.gender === "male" ? "default" : "secondary"
+                              }
+                            >
+                              {student.gender}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {student.shirt_size && (
+                              <div>Shirt: <Badge variant="outline">{student.shirt_size}</Badge></div>
+                            )}
+                            {student.pant_size && (
+                              <div>Pant: <Badge variant="outline">{student.pant_size}</Badge></div>
+                            )}
+                            {student.shoe_size && (
+                              <div>Shoe: <Badge variant="outline">{student.shoe_size}</Badge></div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {student.collar_size && (
+                              <div>Collar: {student.collar_size}</div>
+                            )}
+                            {student.chest && <div>Chest: {student.chest}</div>}
+                            {student.waist && <div>Waist: {student.waist}</div>}
+                            {student.hip && <div>Hip: {student.hip}</div>}
+                            {student.foot_length && <div>Foot: {student.foot_length}</div>}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(student.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm">
+                              View Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="management">
+            <AdminManagement />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
