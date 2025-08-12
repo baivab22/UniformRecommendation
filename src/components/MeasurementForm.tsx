@@ -68,8 +68,8 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
     pantFit: "",
     hipCircumference: "",
     // Shoes specific
-    footLength: "",
-    footWidth: "",
+    // footLength: "",
+    // footWidth: "",
     archHeight: "",
     // Female specific
     bustSize: "",
@@ -179,7 +179,7 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
         { id: "wide", label: "Wide Leg", description: "Loose and flowing" },
       ];
     }
-    
+
     return [
       {
         id: "slim",
@@ -245,14 +245,14 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
       formData.morphology
     );
     const adjustedShirtSize = getAdjustedSize(baseShirtSize, formData.shirtFit);
-    
+
     // Calculate pant size (simplified calculation based on waist)
     const waistSize = parseInt(formData.waist);
     let pantSize = "M";
     if (waistSize < 30) pantSize = "S";
     else if (waistSize > 36) pantSize = "L";
     else pantSize = "M";
-    
+
     // Calculate shoe size (simplified calculation based on foot length)
     const footLength = parseFloat(formData.footLength);
     let shoeSize = "42";
@@ -263,22 +263,22 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
     else if (footLength < 28) shoeSize = "42";
     else if (footLength < 29) shoeSize = "43";
     else shoeSize = "44";
-    
-    setFormData((prev) => ({ 
-      ...prev, 
+
+    setFormData((prev) => ({
+      ...prev,
       shirtSize: adjustedShirtSize,
       pantSize: pantSize,
-      shoeSize: shoeSize
+      shoeSize: shoeSize,
     }));
   };
 
   const handleNext = () => {
     const currentIndex = steps.indexOf(currentStep);
-    
+
     if (currentStep === "shoesMeasurements") {
       calculateAllSizes();
     }
-    
+
     if (currentIndex < steps.length - 1) {
       setCurrentStep(steps[currentIndex + 1]);
     } else {
@@ -316,7 +316,7 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
           (field) => formData[field as keyof typeof formData]
         );
       case "shoesMeasurements":
-        return formData.footLength && formData.footWidth;
+      // return formData.footLength && formData.footWidth;
       case "recommendation":
         return true;
       default:
@@ -325,7 +325,11 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
   };
 
   const getCurrentIcon = () => {
-    if (currentStep.includes("shirt") || currentStep === "personal" || currentStep === "recommendation") {
+    if (
+      currentStep.includes("shirt") ||
+      currentStep === "personal" ||
+      currentStep === "recommendation"
+    ) {
       return <Shirt className="h-8 w-8 text-white" />;
     } else if (currentStep.includes("pant")) {
       return <ShoppingBag className="h-8 w-8 text-white" />;
@@ -452,7 +456,12 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
               className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
             >
               {[
-                { id: "slim", label: "Slim", description: "Lean build", image: slimMorphology },
+                {
+                  id: "slim",
+                  label: "Slim",
+                  description: "Lean build",
+                  image: slimMorphology,
+                },
                 {
                   id: "athletic",
                   label: "Athletic",
@@ -465,7 +474,12 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
                   description: "Standard build",
                   image: stockyMorphology,
                 },
-                { id: "large", label: "Fuller", description: "Broader build", image: fullerMorphology },
+                {
+                  id: "large",
+                  label: "Fuller",
+                  description: "Broader build",
+                  image: fullerMorphology,
+                },
               ].map((option) => (
                 <div key={option.id} className="flex flex-col items-center">
                   <Label
@@ -482,8 +496,8 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
                       className="sr-only"
                     />
                     <div className="w-24 h-32 border border-gray-300 rounded bg-white flex items-center justify-center p-2">
-                      <img 
-                        src={option.image} 
+                      <img
+                        src={option.image}
                         alt={`${option.label} body shape`}
                         className="max-w-full max-h-full object-contain"
                       />
@@ -704,9 +718,7 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
               <p className="text-sm text-blue-600 mt-2">
                 Morphology: {formData.morphology}
               </p>
-              <p className="text-sm text-blue-600">
-                Fit: {formData.shirtFit}
-              </p>
+              <p className="text-sm text-blue-600">Fit: {formData.shirtFit}</p>
             </div>
           </div>
         )}
@@ -860,67 +872,6 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
                 Enter your precise foot measurements for the perfect fit
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <div className="space-y-3">
-                <Label
-                  htmlFor="footLength"
-                  className="text-lg font-medium text-gray-700"
-                >
-                  Foot Length (cm) *
-                </Label>
-                <Input
-                  id="footLength"
-                  type="number"
-                  placeholder="e.g. 26"
-                  value={formData.footLength}
-                  onChange={(e) =>
-                    handleInputChange("footLength", e.target.value)
-                  }
-                  className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
-                />
-              </div>
-              <div className="space-y-3">
-                <Label
-                  htmlFor="footWidth"
-                  className="text-lg font-medium text-gray-700"
-                >
-                  Foot Width (cm) *
-                </Label>
-                <Input
-                  id="footWidth"
-                  type="number"
-                  placeholder="e.g. 10"
-                  value={formData.footWidth}
-                  onChange={(e) =>
-                    handleInputChange("footWidth", e.target.value)
-                  }
-                  className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
-                />
-              </div>
-              <div className="space-y-3 md:col-span-2">
-                <Label
-                  htmlFor="archHeight"
-                  className="text-lg font-medium text-gray-700"
-                >
-                  Arch Height (optional)
-                </Label>
-                <Select
-                  value={formData.archHeight}
-                  onValueChange={(value) =>
-                    handleInputChange("archHeight", value)
-                  }
-                >
-                  <SelectTrigger className="h-14 text-lg border-2 border-blue-200 focus:border-blue-500">
-                    <SelectValue placeholder="Select arch height" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low Arch</SelectItem>
-                    <SelectItem value="normal">Normal Arch</SelectItem>
-                    <SelectItem value="high">High Arch</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
           </div>
         )}
 
@@ -983,8 +934,8 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
                   {formData.shoeSize}
                 </div>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p>Length: {formData.footLength} cm</p>
-                  <p>Width: {formData.footWidth} cm</p>
+                  {/* <p>Length: {formData.footLength} cm</p>
+                  <p>Width: {formData.footWidth} cm</p> */}
                 </div>
               </div>
             </div>
