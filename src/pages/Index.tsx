@@ -57,6 +57,14 @@ const Index = () => {
             </div>
             <span className="text-2xl font-bold text-foreground">Fit-Find</span>
           </div>
+          <div className="hidden md:flex items-center space-x-6">
+            <Link to="/student-form" className="text-sm font-medium hover:text-primary transition-colors">
+              Get Sized
+            </Link>
+            <Link to="/personal-info" className="text-sm font-medium hover:text-primary transition-colors">
+              Personal Info
+            </Link>
+          </div>
           <div className="flex items-center gap-2">
             <Dialog>
               <DialogTrigger asChild>

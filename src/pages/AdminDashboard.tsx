@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { AdminManagement } from "@/components/AdminManagement";
+import { useManagementData } from "@/hooks/useManagementData";
 
 // import {
 //   Card,
@@ -78,6 +79,7 @@ const AdminDashboard = () => {
   const [filterBatch, setFilterBatch] = useState("all");
   const [activeTab, setActiveTab] = useState("dashboard");
   const navigate = useNavigate();
+  const { colleges, batches, getCollegeName, getBatchesByCollege } = useManagementData();
 
   // ✅ Auth check
   useEffect(() => {
@@ -110,17 +112,44 @@ const AdminDashboard = () => {
     navigate("/admin-login");
   };
 
+  // Size calculation functions
+  const calculateShirtSize = (student: any) => {
+    if (!student.chest) return 'Measurements needed';
+    const chest = student.chest;
+    if (chest <= 36) return 'S';
+    if (chest <= 40) return 'M';
+    if (chest <= 44) return 'L';
+    if (chest <= 48) return 'XL';
+    return 'XXL';
+  };
+
+  const calculatePantSize = (student: any) => {
+    if (!student.waist) return 'Measurements needed';
+    const waist = student.waist;
+    if (waist <= 30) return '30';
+    if (waist <= 32) return '32';
+    if (waist <= 34) return '34';
+    if (waist <= 36) return '36';
+    if (waist <= 38) return '38';
+    return '40+';
+  };
+
   // ✅ Filters
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
       student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCollege =
-      filterCollege === "all" || student.college === filterCollege;
+      filterCollege === "all" || student.college === getCollegeName(filterCollege) || student.college === filterCollege;
     const matchesBatch = filterBatch === "all" || student.batch === filterBatch;
 
     return matchesSearch && matchesCollege && matchesBatch;
   });
+
+  // Get available batches for selected college
+  const availableBatches = filterCollege === "all" 
+    ? batches 
+    : getBatchesByCollege(filterCollege);
 
   const stats = {
     totalStudents: students.length,
@@ -226,30 +255,31 @@ const AdminDashboard = () => {
                   className="pl-10"
                 />
               </div>
-              <Select value={filterCollege} onValueChange={setFilterCollege}>
+              <Select value={filterCollege} onValueChange={(value) => {
+                setFilterCollege(value);
+                setFilterBatch("all"); // Reset batch filter when college changes
+              }}>
                 <SelectTrigger className="w-full md:w-48">
                   <SelectValue placeholder="Filter by college" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   <SelectItem value="all">All Colleges</SelectItem>
-                  {[...new Set(students.map((s) => s.college))].map(
-                    (college) => (
-                      <SelectItem key={college} value={college}>
-                        {college}
-                      </SelectItem>
-                    )
-                  )}
+                  {colleges.map((college) => (
+                    <SelectItem key={college.id} value={college.id}>
+                      {college.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Select value={filterBatch} onValueChange={setFilterBatch}>
-                <SelectTrigger className="w-full md:w-32">
+                <SelectTrigger className="w-full md:w-40">
                   <SelectValue placeholder="Batch" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   <SelectItem value="all">All Batches</SelectItem>
-                  {[...new Set(students.map((s) => s.batch))].map((batch) => (
-                    <SelectItem key={batch} value={batch}>
-                      {batch}
+                  {availableBatches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.name}>
+                      {batch.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -308,15 +338,35 @@ const AdminDashboard = () => {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-sm">
-                            {student.shirt_size && (
-                              <div>Shirt: <Badge variant="outline">{student.shirt_size}</Badge></div>
-                            )}
-                            {student.pant_size && (
-                              <div>Pant: <Badge variant="outline">{student.pant_size}</Badge></div>
-                            )}
-                            {student.shoe_size && (
-                              <div>Shoe: <Badge variant="outline">{student.shoe_size}</Badge></div>
-                            )}
+                            <div className="space-y-1">
+                              {student.clothing_type === "shirt" && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">Shirt:</span>
+                                  <Badge variant="secondary">
+                                    {calculateShirtSize(student)}
+                                  </Badge>
+                                </div>
+                              )}
+                              {student.clothing_type === "pant" && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">Pant:</span>
+                                  <Badge variant="secondary">
+                                    {calculatePantSize(student)}
+                                  </Badge>
+                                </div>
+                              )}
+                              {student.clothing_type === "shoes" && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">Shoe:</span>
+                                  <Badge variant="secondary">
+                                    {student.shoe_size || 'Not specified'}
+                                  </Badge>
+                                </div>
+                              )}
+                              {!student.clothing_type && (
+                                <span className="text-xs text-muted-foreground">No type selected</span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-sm">
                             {student.collar_size && (
@@ -345,7 +395,10 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="management">
-            <AdminManagement />
+            <AdminManagement onDataUpdate={() => {
+              // Refresh management data when changes are made
+              window.location.reload();
+            }} />
           </TabsContent>
         </Tabs>
       </div>
