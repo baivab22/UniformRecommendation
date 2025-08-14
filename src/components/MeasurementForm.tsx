@@ -246,29 +246,60 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
     );
     const adjustedShirtSize = getAdjustedSize(baseShirtSize, formData.shirtFit);
 
+    function recommendPantSize({ heightInch = null, waistInch = null }) {
+      console.log(heightInch, waistInch, "inch values");
+
+      const sizeChart = [
+        { size: "3XS", waistMin: 20, waistMax: 24, length: 39 },
+        { size: "2XS", waistMin: 21, waistMax: 25, length: 40 },
+        { size: "XS", waistMin: 22, waistMax: 26, length: 41 },
+        { size: "S", waistMin: 26, waistMax: 31, length: 42 },
+        { size: "M", waistMin: 32, waistMax: 36, length: 43 },
+        { size: "L", waistMin: 37, waistMax: 40, length: 44 },
+        { size: "XL", waistMin: 41, waistMax: 45, length: 45 },
+        { size: "2XL", waistMin: 45, waistMax: 50, length: 46 },
+        { size: "3XL", waistMin: 51, waistMax: 55, length: 46 },
+        { size: "4XL", waistMin: 56, waistMax: 62, length: 46 },
+      ];
+
+      if (!waistInch) return "Unknown";
+
+      let matchedSize = sizeChart.find(
+        (entry) => waistInch >= entry.waistMin && waistInch <= entry.waistMax
+      );
+
+      return matchedSize ? matchedSize.size : "Custom";
+    }
+
     // Calculate pant size (simplified calculation based on waist)
-    const waistSize = parseInt(formData.waist);
-    let pantSize = "M";
-    if (waistSize < 30) pantSize = "S";
-    else if (waistSize > 36) pantSize = "L";
-    else pantSize = "M";
+    // const waistSize = parseInt(formData.waist);
+    // let pantSize = "M";
+
+    // if (waistSize < 30) pantSize = "S";
+    // else if (waistSize > 36) pantSize = "L";
+    // else pantSize = "M";
+
+    const pantSize = recommendPantSize({
+      heightInch: height,
+      waistInch: parseInt(formData.waist),
+    });
 
     // Calculate shoe size (simplified calculation based on foot length)
-    const footLength = parseFloat(formData.footLength);
+    const footLength = parseFloat(formData.shoeSize);
     let shoeSize = "42";
-    if (footLength < 24) shoeSize = "38";
-    else if (footLength < 25) shoeSize = "39";
-    else if (footLength < 26) shoeSize = "40";
-    else if (footLength < 27) shoeSize = "41";
-    else if (footLength < 28) shoeSize = "42";
-    else if (footLength < 29) shoeSize = "43";
-    else shoeSize = "44";
+    // if (footLength < 24) shoeSize = "38";
+    // else if (footLength < 25) shoeSize = "39";
+    // else if (footLength < 26) shoeSize = "40";
+    // else if (footLength < 27) shoeSize = "41";
+    // else if (footLength < 28) shoeSize = "42";
+    // else if (footLength < 29) shoeSize = "43";
+    // else shoeSize = "44";
 
     setFormData((prev) => ({
       ...prev,
       shirtSize: adjustedShirtSize,
       pantSize: pantSize,
-      shoeSize: shoeSize,
+      shoeSize: formData.shoeSize,
     }));
   };
 
@@ -308,10 +339,10 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
       case "pantFit":
         return formData.pantFit !== "";
       case "pantMeasurements":
-        const required = ["waist", "hip", "inseam"];
-        if (gender === "female") {
-          required.push("hipCircumference");
-        }
+        const required = ["waist"];
+        // if (gender === "female") {
+        //   required.push("hipCircumference");
+        // }
         return required.every(
           (field) => formData[field as keyof typeof formData]
         );
@@ -806,7 +837,7 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
                   className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
                 />
               </div>
-              <div className="space-y-3">
+              {/* <div className="space-y-3">
                 <Label
                   htmlFor="hip"
                   className="text-lg font-medium text-gray-700"
@@ -837,8 +868,8 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
                   onChange={(e) => handleInputChange("inseam", e.target.value)}
                   className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
                 />
-              </div>
-              {gender === "female" && (
+              </div> */}
+              {/* {gender === "female" && (
                 <div className="space-y-3">
                   <Label
                     htmlFor="hipCircumference"
@@ -857,7 +888,7 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
                     className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
                   />
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         )}
@@ -871,6 +902,25 @@ const MeasurementForm = ({ gender, onSubmit }: Props) => {
               <p className="text-gray-600 text-lg">
                 Enter your precise foot measurements for the perfect fit
               </p>
+
+              <div className="space-y-3">
+                <Label
+                  htmlFor="waist"
+                  className="text-lg font-medium text-gray-700"
+                >
+                  Shoes Size
+                </Label>
+                <Input
+                  id="shoeSize"
+                  type="number"
+                  placeholder="e.g. 32"
+                  // value={formData.shoeSize}
+                  onChange={(e) =>
+                    handleInputChange("shoeSize", e.target.value)
+                  }
+                  className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                />
+              </div>
             </div>
           </div>
         )}

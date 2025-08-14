@@ -23,6 +23,15 @@ import { useToast } from "@/hooks/use-toast";
 import { UserCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
+type School = { id: string; name: string; created_at?: string };
+type College = { id: string; name: string; created_at?: string };
+type Batch = {
+  id: string;
+  name: string;
+  college_id: string;
+  created_at?: string;
+};
+
 const PersonalInfo = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -38,6 +47,11 @@ const PersonalInfo = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const [schools, setSchools] = useState<School[]>([]);
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [selectedCollegeId, setSelectedCollegeId] = useState<string>("");
+
   useEffect(() => {
     const storedData = localStorage.getItem("measurementData");
     if (storedData) {
@@ -47,6 +61,44 @@ const PersonalInfo = () => {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [schoolsRes, collegesRes, batchesRes] = await Promise.all([
+        supabase
+          .from("schools")
+          .select("*")
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("colleges")
+          .select("*")
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("batches")
+          .select("*")
+          .order("created_at", { ascending: true }),
+      ]);
+
+      if (schoolsRes.error) throw schoolsRes.error;
+      if (collegesRes.error) throw collegesRes.error;
+      if (batchesRes.error) throw batchesRes.error;
+
+      setSchools((schoolsRes.data as School[]) ?? []);
+      setColleges((collegesRes.data as College[]) ?? []);
+      setBatches((batchesRes.data as Batch[]) ?? []);
+    } catch (error: any) {
+      console.error("Error fetching data:", error);
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to fetch management data",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -55,7 +107,6 @@ const PersonalInfo = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Validate required fields
     if (
       !formData.name ||
       !formData.mobile ||
@@ -93,28 +144,22 @@ const PersonalInfo = () => {
     }
 
     try {
-      // Merge form data and measurement data
       const combinedData = {
         ...formData,
         ...measurementData,
-        agreeToTerms: undefined, // don't send this to DB
+        agreeToTerms: undefined,
       };
 
-      // Remove any undefined/null/empty values
       const cleanedData = Object.fromEntries(
         Object.entries(combinedData).filter(
           ([_, value]) => value !== null && value !== "" && value !== undefined
         )
       );
 
-      // Send to Supabase
-      const { data, error } = await supabase
-        .from("students")
-        .insert([cleanedData]);
+      const { error } = await supabase.from("students").insert([cleanedData]);
 
       if (error) throw error;
 
-      // Clean up
       localStorage.removeItem("measurementData");
 
       toast({
@@ -194,45 +239,82 @@ const PersonalInfo = () => {
 
               {/* Academic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* College Select */}
                 <div className="space-y-2">
                   <Label htmlFor="college">College/Institution *</Label>
                   <Select
-                    value={formData.college}
-                    onValueChange={(value) =>
-                      handleInputChange("college", value)
+                    value={
+                      colleges.find((c) => c.name === formData.college)?.id ||
+                      ""
                     }
+                    onValueChange={(collegeId) => {
+                      const selectedCollege = colleges.find(
+                        (c) => c.id === collegeId
+                      );
+                      handleInputChange("college", selectedCollege?.name || "");
+                      setSelectedCollegeId(collegeId);
+                      handleInputChange("batch", "");
+                    }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select college" />
+                      <SelectValue>
+                        {formData.college || "Select college"}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="mit">MIT College</SelectItem>
-                      <SelectItem value="stanford">
-                        Stanford University
-                      </SelectItem>
-                      <SelectItem value="harvard">
-                        Harvard University
-                      </SelectItem>
-                      <SelectItem value="oxford">Oxford University</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      {colleges.length > 0 ? (
+                        colleges.map((college) => (
+                          <SelectItem key={college.id} value={college.id}>
+                            {college.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem disabled value="no-college">
+                          No colleges available
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Batch Select */}
                 <div className="space-y-2">
                   <Label htmlFor="batch">Batch/Year *</Label>
                   <Select
-                    value={formData.batch}
-                    onValueChange={(value) => handleInputChange("batch", value)}
+                    value={
+                      batches.find((b) => b.name === formData.batch)?.id || ""
+                    }
+                    onValueChange={(batchId) => {
+                      const selectedBatch = batches.find(
+                        (b) => b.id === batchId
+                      );
+                      handleInputChange("batch", selectedBatch?.name || "");
+                    }}
+                    disabled={!selectedCollegeId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select batch" />
+                      <SelectValue>
+                        {formData.batch || "Select batch"}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="2024">2024</SelectItem>
-                      <SelectItem value="2025">2025</SelectItem>
-                      <SelectItem value="2026">2026</SelectItem>
-                      <SelectItem value="2027">2027</SelectItem>
-                      <SelectItem value="2028">2028</SelectItem>
+                      {batches.filter(
+                        (batch) => batch.college_id === selectedCollegeId
+                      ).length > 0 ? (
+                        batches
+                          .filter(
+                            (batch) => batch.college_id === selectedCollegeId
+                          )
+                          .map((batch) => (
+                            <SelectItem key={batch.id} value={batch.id}>
+                              {batch.name}
+                            </SelectItem>
+                          ))
+                      ) : (
+                        <SelectItem disabled value="no-batch">
+                          No batches available
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

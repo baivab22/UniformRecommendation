@@ -2,33 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { AdminManagement } from "@/components/AdminManagement";
-import { useManagementData } from "@/hooks/useManagementData";
-
-// import {
-//   Card,
-//   CardContent,
-//   CardDescription,
-//   CardHeader,
-//   CardTitle,
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-//   Tabs,
-//   TabsContent,
-//   TabsList,
-//   TabsTrigger,
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-//   Input,
-//   Button,
-//   Badge,
-// } from "@/components/ui";
+// Remove useManagementData import since we'll fetch directly
+// import { useManagementData } from "@/hooks/useManagementData";
 
 import {
   Card,
@@ -74,12 +49,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AdminDashboard = () => {
   const [students, setStudents] = useState<any[]>([]);
+  const [colleges, setColleges] = useState<any[]>([]);
+  const [batches, setBatches] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCollege, setFilterCollege] = useState("all");
   const [filterBatch, setFilterBatch] = useState("all");
   const [activeTab, setActiveTab] = useState("dashboard");
   const navigate = useNavigate();
-  const { colleges, batches, getCollegeName, getBatchesByCollege } = useManagementData();
 
   // ✅ Auth check
   useEffect(() => {
@@ -100,11 +76,47 @@ const AdminDashboard = () => {
       if (error) {
         console.error("Error fetching students:", error.message);
       } else {
-        setStudents(data);
+        setStudents(data || []);
       }
     };
 
     fetchStudents();
+  }, []);
+
+  // ✅ Fetch colleges from Supabase
+  useEffect(() => {
+    const fetchColleges = async () => {
+      const { data, error } = await supabase
+        .from("colleges")
+        .select("*")
+        .order("name", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching colleges:", error.message);
+      } else {
+        setColleges(data || []);
+      }
+    };
+
+    fetchColleges();
+  }, []);
+
+  // ✅ Fetch batches from Supabase
+  useEffect(() => {
+    const fetchBatches = async () => {
+      const { data, error } = await supabase
+        .from("batches")
+        .select("*")
+        .order("name", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching batches:", error.message);
+      } else {
+        setBatches(data || []);
+      }
+    };
+
+    fetchBatches();
   }, []);
 
   const handleLogout = () => {
@@ -112,26 +124,38 @@ const AdminDashboard = () => {
     navigate("/admin-login");
   };
 
+  // Helper function to get college name by ID
+  const getCollegeName = (collegeId: string) => {
+    const college = colleges.find((c) => c.id === collegeId);
+    return college ? college.name : collegeId;
+  };
+
+  // Helper function to get batches for a specific college
+  const getBatchesByCollege = (collegeId: string) => {
+    if (collegeId === "all") return batches;
+    return batches.filter((batch) => batch.college_id === collegeId);
+  };
+
   // Size calculation functions
   const calculateShirtSize = (student: any) => {
-    if (!student.chest) return 'Measurements needed';
+    if (!student.chest) return "Measurements needed";
     const chest = student.chest;
-    if (chest <= 36) return 'S';
-    if (chest <= 40) return 'M';
-    if (chest <= 44) return 'L';
-    if (chest <= 48) return 'XL';
-    return 'XXL';
+    if (chest <= 36) return "S";
+    if (chest <= 40) return "M";
+    if (chest <= 44) return "L";
+    if (chest <= 48) return "XL";
+    return "XXL";
   };
 
   const calculatePantSize = (student: any) => {
-    if (!student.waist) return 'Measurements needed';
+    if (!student.waist) return "Measurements needed";
     const waist = student.waist;
-    if (waist <= 30) return '30';
-    if (waist <= 32) return '32';
-    if (waist <= 34) return '34';
-    if (waist <= 36) return '36';
-    if (waist <= 38) return '38';
-    return '40+';
+    if (waist <= 30) return "30";
+    if (waist <= 32) return "32";
+    if (waist <= 34) return "34";
+    if (waist <= 36) return "36";
+    if (waist <= 38) return "38";
+    return "40+";
   };
 
   // ✅ Filters
@@ -140,16 +164,21 @@ const AdminDashboard = () => {
       student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCollege =
-      filterCollege === "all" || student.college === getCollegeName(filterCollege) || student.college === filterCollege;
-    const matchesBatch = filterBatch === "all" || student.batch === filterBatch;
+      filterCollege === "all" ||
+      student.college === getCollegeName(filterCollege) ||
+      student.college === filterCollege ||
+      student.college_id === filterCollege;
+    const matchesBatch =
+      filterBatch === "all" ||
+      student.batch === filterBatch ||
+      student.batch_id === filterBatch;
 
     return matchesSearch && matchesCollege && matchesBatch;
   });
 
   // Get available batches for selected college
-  const availableBatches = filterCollege === "all" 
-    ? batches 
-    : getBatchesByCollege(filterCollege);
+  const availableBatches =
+    filterCollege === "all" ? batches : getBatchesByCollege(filterCollege);
 
   const stats = {
     totalStudents: students.length,
@@ -159,6 +188,8 @@ const AdminDashboard = () => {
     pantOrders: students.filter((s) => s.clothing_type === "pant").length,
     shoeOrders: students.filter((s) => s.clothing_type === "shoes").length,
   };
+
+  console.log(batches, colleges, "batched value data");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-accent/5 to-background p-4">
@@ -182,7 +213,11 @@ const AdminDashboard = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
@@ -195,109 +230,114 @@ const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <Card>
+                <CardHeader className="flex justify-between">
+                  <CardTitle className="text-sm">Total Students</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {stats.totalStudents}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.maleStudents} male, {stats.femaleStudents} female
+                  </p>
+                </CardContent>
+              </Card>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex justify-between">
-              <CardTitle className="text-sm">Total Students</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalStudents}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.maleStudents} male, {stats.femaleStudents} female
-              </p>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="flex justify-between">
+                  <CardTitle className="text-sm">Shirt Orders</CardTitle>
+                  <Shirt className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.shirtOrders}</div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="flex justify-between">
-              <CardTitle className="text-sm">Shirt Orders</CardTitle>
-              <Shirt className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.shirtOrders}</div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="flex justify-between">
+                  <CardTitle className="text-sm">Pant Orders</CardTitle>
+                  <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.pantOrders}</div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="flex justify-between">
-              <CardTitle className="text-sm">Pant Orders</CardTitle>
-              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pantOrders}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex justify-between">
-              <CardTitle className="text-sm">Shoe Orders</CardTitle>
-              <Footprints className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.shoeOrders}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search students..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={filterCollege} onValueChange={(value) => {
-                setFilterCollege(value);
-                setFilterBatch("all"); // Reset batch filter when college changes
-              }}>
-                <SelectTrigger className="w-full md:w-48">
-                  <SelectValue placeholder="Filter by college" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="all">All Colleges</SelectItem>
-                  {colleges.map((college) => (
-                    <SelectItem key={college.id} value={college.id}>
-                      {college.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filterBatch} onValueChange={setFilterBatch}>
-                <SelectTrigger className="w-full md:w-40">
-                  <SelectValue placeholder="Batch" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="all">All Batches</SelectItem>
-                  {availableBatches.map((batch) => (
-                    <SelectItem key={batch.id} value={batch.name}>
-                      {batch.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
+              <Card>
+                <CardHeader className="flex justify-between">
+                  <CardTitle className="text-sm">Shoe Orders</CardTitle>
+                  <Footprints className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.shoeOrders}</div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Filters */}
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search students..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Select
+                    value={filterCollege}
+                    onValueChange={(value) => {
+                      setFilterCollege(value);
+                      setFilterBatch("all"); // Reset batch filter when college changes
+                    }}
+                  >
+                    <SelectTrigger className="w-full md:w-48">
+                      <SelectValue placeholder="Filter by college" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">All Colleges</SelectItem>
+                      {colleges.map((college) => (
+                        <SelectItem key={college.id} value={college.id}>
+                          {college.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterBatch} onValueChange={setFilterBatch}>
+                    <SelectTrigger className="w-full md:w-40">
+                      <SelectValue placeholder="Batch" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">All Batches</SelectItem>
+                      {availableBatches.map((batch) => (
+                        <SelectItem key={batch.id} value={batch.id}>
+                          {batch.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Student Table */}
             <Card>
               <CardHeader>
                 <CardTitle>Student Submissions</CardTitle>
                 <CardDescription>
-                  Showing {filteredStudents.length} of {students.length} students
+                  Showing {filteredStudents.length} of {students.length}{" "}
+                  students
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -331,7 +371,9 @@ const AdminDashboard = () => {
                           <TableCell>
                             <Badge
                               variant={
-                                student.gender === "male" ? "default" : "secondary"
+                                student.gender === "male"
+                                  ? "default"
+                                  : "secondary"
                               }
                             >
                               {student.gender}
@@ -341,7 +383,9 @@ const AdminDashboard = () => {
                             <div className="space-y-1">
                               {student.clothing_type === "shirt" && (
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-muted-foreground">Shirt:</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    Shirt:
+                                  </span>
                                   <Badge variant="secondary">
                                     {calculateShirtSize(student)}
                                   </Badge>
@@ -349,7 +393,9 @@ const AdminDashboard = () => {
                               )}
                               {student.clothing_type === "pant" && (
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-muted-foreground">Pant:</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    Pant:
+                                  </span>
                                   <Badge variant="secondary">
                                     {calculatePantSize(student)}
                                   </Badge>
@@ -357,14 +403,18 @@ const AdminDashboard = () => {
                               )}
                               {student.clothing_type === "shoes" && (
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-muted-foreground">Shoe:</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    Shoe:
+                                  </span>
                                   <Badge variant="secondary">
-                                    {student.shoe_size || 'Not specified'}
+                                    {student.shoe_size || "Not specified"}
                                   </Badge>
                                 </div>
                               )}
                               {!student.clothing_type && (
-                                <span className="text-xs text-muted-foreground">No type selected</span>
+                                <span className="text-xs text-muted-foreground">
+                                  No type selected
+                                </span>
                               )}
                             </div>
                           </TableCell>
@@ -375,7 +425,9 @@ const AdminDashboard = () => {
                             {student.chest && <div>Chest: {student.chest}</div>}
                             {student.waist && <div>Waist: {student.waist}</div>}
                             {student.hip && <div>Hip: {student.hip}</div>}
-                            {student.foot_length && <div>Foot: {student.foot_length}</div>}
+                            {student.foot_length && (
+                              <div>Foot: {student.foot_length}</div>
+                            )}
                           </TableCell>
                           <TableCell>
                             {new Date(student.created_at).toLocaleDateString()}
@@ -395,10 +447,12 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="management">
-            <AdminManagement onDataUpdate={() => {
-              // Refresh management data when changes are made
-              window.location.reload();
-            }} />
+            <AdminManagement
+              onDataUpdate={() => {
+                // Refresh all data when changes are made
+                window.location.reload();
+              }}
+            />
           </TabsContent>
         </Tabs>
       </div>

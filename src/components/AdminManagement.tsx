@@ -2,33 +2,55 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, School, GraduationCap, Calendar, Edit } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  School,
+  GraduationCap,
+  Calendar,
+  Edit,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { ManagementItem } from "@/hooks/useManagementData";
+
+type School = { id: string; name: string; created_at?: string };
+type College = { id: string; name: string; created_at?: string };
+type Batch = {
+  id: string;
+  name: string;
+  college_id: string;
+  created_at?: string;
+};
 
 interface AdminManagementProps {
   onDataUpdate?: () => void;
 }
 
 export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
-  const [schools, setSchools] = useState<ManagementItem[]>([]);
-  const [colleges, setColleges] = useState<ManagementItem[]>([]);
-  const [batches, setBatches] = useState<ManagementItem[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
   const [selectedCollege, setSelectedCollege] = useState<string>("");
+
   const [dialogState, setDialogState] = useState<{
     type: "school" | "college" | "batch" | "";
     mode: "add" | "edit";
-    item?: ManagementItem;
+    item?: School | College | Batch;
     name: string;
   }>({
     type: "",
     mode: "add",
-    name: ""
+    name: "",
   });
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -37,35 +59,34 @@ export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
 
   const fetchData = async () => {
     try {
-      // For now, use local state with sample data
-      // In production, you'd create separate tables: schools, colleges, batches
-      const sampleSchools = [
-        { id: 'school-1', name: 'ABC High School', created_at: new Date().toISOString() },
-        { id: 'school-2', name: 'XYZ Academy', created_at: new Date().toISOString() }
-      ];
-      
-      const sampleColleges = [
-        { id: 'college-1', name: 'State University', created_at: new Date().toISOString() },
-        { id: 'college-2', name: 'City College', created_at: new Date().toISOString() },
-        { id: 'college-3', name: 'Tech Institute', created_at: new Date().toISOString() }
-      ];
-      
-      const sampleBatches = [
-        { id: 'batch-1', name: '2024 Batch', created_at: new Date().toISOString(), parent_id: 'college-1' },
-        { id: 'batch-2', name: '2025 Batch', created_at: new Date().toISOString(), parent_id: 'college-1' },
-        { id: 'batch-3', name: '2024 Engineering', created_at: new Date().toISOString(), parent_id: 'college-2' },
-        { id: 'batch-4', name: '2024 CS', created_at: new Date().toISOString(), parent_id: 'college-3' }
-      ];
+      const [schoolsRes, collegesRes, batchesRes] = await Promise.all([
+        supabase
+          .from("schools")
+          .select("*")
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("colleges")
+          .select("*")
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("batches")
+          .select("*")
+          .order("created_at", { ascending: true }),
+      ]);
 
-      setSchools(sampleSchools);
-      setColleges(sampleColleges);
-      setBatches(sampleBatches);
-    } catch (error) {
+      if (schoolsRes.error) throw schoolsRes.error;
+      if (collegesRes.error) throw collegesRes.error;
+      if (batchesRes.error) throw batchesRes.error;
+
+      setSchools((schoolsRes.data as School[]) ?? []);
+      setColleges((collegesRes.data as College[]) ?? []);
+      setBatches((batchesRes.data as Batch[]) ?? []);
+    } catch (error: any) {
       console.error("Error fetching data:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch management data",
-        variant: "destructive"
+        description: error?.message || "Failed to fetch management data",
+        variant: "destructive",
       });
     }
   };
@@ -73,87 +94,123 @@ export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
   const handleSubmit = async () => {
     if (!dialogState.name.trim()) return;
 
-    const newItem: ManagementItem = {
-      id: `${dialogState.type}-${Date.now()}`,
-      name: dialogState.name.trim(),
-      created_at: new Date().toISOString(),
-      ...(dialogState.type === "batch" && selectedCollege && { parent_id: selectedCollege })
-    };
+    const isSchool = dialogState.type === "school";
+    const isCollege = dialogState.type === "college";
+    const isBatch = dialogState.type === "batch";
+    const table = isSchool ? "schools" : isCollege ? "colleges" : "batches";
 
-    if (dialogState.mode === "edit" && dialogState.item) {
-      // Update existing item
-      if (dialogState.type === "school") {
-        setSchools(prev => prev.map(item => 
-          item.id === dialogState.item!.id 
-            ? { ...item, name: dialogState.name.trim() }
-            : item
-        ));
-      } else if (dialogState.type === "college") {
-        setColleges(prev => prev.map(item => 
-          item.id === dialogState.item!.id 
-            ? { ...item, name: dialogState.name.trim() }
-            : item
-        ));
+    try {
+      if (dialogState.mode === "edit" && dialogState.item) {
+        const payload: any = { name: dialogState.name.trim() };
+        if (isBatch && selectedCollege) payload.college_id = selectedCollege;
+
+        const { error } = await supabase
+          .from(table)
+          .update(payload)
+          .eq("id", (dialogState.item as any).id);
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: `${capitalize(dialogState.type)} updated successfully`,
+        });
       } else {
-        setBatches(prev => prev.map(item => 
-          item.id === dialogState.item!.id 
-            ? { ...item, name: dialogState.name.trim(), parent_id: selectedCollege || item.parent_id }
-            : item
-        ));
+        const payload: any = { name: dialogState.name.trim() };
+        if (isBatch) {
+          if (!selectedCollege) {
+            toast({
+              title: "Select college",
+              description: "Please choose a college for this batch.",
+              variant: "destructive",
+            });
+            return;
+          }
+          payload.college_id = selectedCollege;
+        }
+
+        const { error } = await supabase.from(table).insert([payload]);
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: `${capitalize(dialogState.type)} added successfully`,
+        });
       }
-      
+
+      closeDialog();
+      await fetchData();
+      onDataUpdate?.();
+    } catch (error: any) {
+      console.error(error);
       toast({
-        title: "Success",
-        description: `${dialogState.type.charAt(0).toUpperCase() + dialogState.type.slice(1)} updated successfully`,
-      });
-    } else {
-      // Add new item
-      if (dialogState.type === "school") {
-        setSchools(prev => [...prev, newItem]);
-      } else if (dialogState.type === "college") {
-        setColleges(prev => [...prev, newItem]);
-      } else {
-        setBatches(prev => [...prev, newItem]);
-      }
-      
-      toast({
-        title: "Success",
-        description: `${dialogState.type.charAt(0).toUpperCase() + dialogState.type.slice(1)} added successfully`,
+        title: "Error",
+        description:
+          error?.message ||
+          `Failed to ${dialogState.mode === "edit" ? "update" : "add"} ${
+            dialogState.type
+          }`,
+        variant: "destructive",
       });
     }
-
-    closeDialog();
-    onDataUpdate?.();
   };
 
-  const deleteItem = async (type: "school" | "college" | "batch", id: string) => {
-    if (type === "school") {
-      setSchools(prev => prev.filter(item => item.id !== id));
-    } else if (type === "college") {
-      setColleges(prev => prev.filter(item => item.id !== id));
-      // Also delete related batches
-      setBatches(prev => prev.filter(item => item.parent_id !== id));
-    } else {
-      setBatches(prev => prev.filter(item => item.id !== id));
+  const deleteItem = async (
+    type: "school" | "college" | "batch",
+    id: string
+  ) => {
+    const table =
+      type === "school"
+        ? "schools"
+        : type === "college"
+        ? "colleges"
+        : "batches";
+    try {
+      // If you have FK ON DELETE CASCADE on batches.college_id → colleges.id you can remove the manual cascade below.
+      if (type === "college") {
+        await supabase.from("batches").delete().eq("college_id", id);
+      }
+
+      const { error } = await supabase.from(table).delete().eq("id", id);
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `${capitalize(type)} deleted successfully`,
+      });
+
+      await fetchData();
+      onDataUpdate?.();
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: error?.message || `Failed to delete ${type}`,
+        variant: "destructive",
+      });
     }
-
-    toast({
-      title: "Success",
-      description: `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`,
-    });
-    
-    onDataUpdate?.();
   };
 
-  const openDialog = (type: "school" | "college" | "batch", mode: "add" | "edit" = "add", item?: ManagementItem) => {
+  const openDialog = (
+    type: "school" | "college" | "batch",
+    mode: "add" | "edit" = "add",
+    item?: School | College | Batch
+  ) => {
     setDialogState({
       type,
       mode,
       item,
-      name: item?.name || ""
+      name: item?.name || "",
     });
-    if (item?.parent_id) {
-      setSelectedCollege(item.parent_id);
+
+    if (type === "batch") {
+      // For edit, prefill the college select with the existing value
+      if (mode === "edit" && item && (item as Batch).college_id) {
+        setSelectedCollege((item as Batch).college_id);
+      } else {
+        setSelectedCollege("");
+      }
+    } else {
+      setSelectedCollege("");
     }
   };
 
@@ -161,13 +218,14 @@ export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
     setDialogState({
       type: "",
       mode: "add",
-      name: ""
+      name: "",
+      item: undefined,
     });
     setSelectedCollege("");
   };
 
   const getCollegeBatches = (collegeId: string) => {
-    return batches.filter(batch => batch.parent_id === collegeId);
+    return batches.filter((b) => b.college_id === collegeId);
   };
 
   return (
@@ -175,7 +233,9 @@ export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Management</h2>
-          <p className="text-muted-foreground">Manage schools, colleges, and batches</p>
+          <p className="text-muted-foreground">
+            Manage schools, colleges, and batches
+          </p>
         </div>
       </div>
 
@@ -189,7 +249,7 @@ export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
           onEdit={(item) => openDialog("school", "edit", item)}
           onDelete={(id) => deleteItem("school", id)}
         />
-        
+
         <ManagementCard
           title="Colleges"
           items={colleges}
@@ -204,20 +264,24 @@ export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
             </div>
           )}
         />
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <Calendar className="h-5 w-5" />
               Batches
             </CardTitle>
-            <Button size="sm" variant="outline" onClick={() => openDialog("batch")}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => openDialog("batch")}
+            >
               <Plus className="h-4 w-4 mr-1" />
               Add
             </Button>
           </CardHeader>
           <CardContent>
-            {colleges.map(college => {
+            {colleges.map((college) => {
               const collegeBatches = getCollegeBatches(college.id);
               return (
                 <div key={college.id} className="mb-4 last:mb-0">
@@ -226,10 +290,15 @@ export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
                   </h4>
                   <div className="space-y-2 ml-3">
                     {collegeBatches.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No batches yet</p>
+                      <p className="text-xs text-muted-foreground">
+                        No batches yet
+                      </p>
                     ) : (
-                      collegeBatches.map(batch => (
-                        <div key={batch.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-md">
+                      collegeBatches.map((batch) => (
+                        <div
+                          key={batch.id}
+                          className="flex items-center justify-between p-2 bg-muted/30 rounded-md"
+                        >
                           <span className="text-sm">{batch.name}</span>
                           <div className="flex gap-1">
                             <Button
@@ -265,17 +334,23 @@ export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
         </Card>
       </div>
 
-      <Dialog open={dialogState.type !== ""} onOpenChange={(open) => !open && closeDialog()}>
+      <Dialog
+        open={dialogState.type !== ""}
+        onOpenChange={(open) => !open && closeDialog()}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {dialogState.mode === "edit" ? "Edit" : "Add New"} {dialogState.type}
+              {dialogState.mode === "edit" ? "Edit" : "Add New"}{" "}
+              {dialogState.type}
             </DialogTitle>
           </DialogHeader>
+
           <div className="space-y-4 py-4">
             {dialogState.type === "batch" && (
               <div className="space-y-2">
                 <Label>College</Label>
+                {/* This dropdown only shows colleges — not batches — fixing the “same options” issue */}
                 <select
                   value={selectedCollege}
                   onChange={(e) => setSelectedCollege(e.target.value)}
@@ -283,7 +358,7 @@ export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
                   required
                 >
                   <option value="">Select College</option>
-                  {colleges.map(college => (
+                  {colleges.map((college) => (
                     <option key={college.id} value={college.id}>
                       {college.name}
                     </option>
@@ -291,22 +366,30 @@ export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
                 </select>
               </div>
             )}
+
             <div className="space-y-2">
               <Label htmlFor="item-name">Name</Label>
               <Input
                 id="item-name"
                 value={dialogState.name}
-                onChange={(e) => setDialogState(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) =>
+                  setDialogState((prev) => ({ ...prev, name: e.target.value }))
+                }
                 placeholder={`Enter ${dialogState.type} name`}
                 autoFocus
               />
             </div>
-            <Button 
+
+            <Button
               onClick={handleSubmit}
               className="w-full"
-              disabled={!dialogState.name.trim() || (dialogState.type === "batch" && !selectedCollege)}
+              disabled={
+                !dialogState.name.trim() ||
+                (dialogState.type === "batch" && !selectedCollege)
+              }
             >
-              {dialogState.mode === "edit" ? "Update" : "Add"} {dialogState.type}
+              {dialogState.mode === "edit" ? "Update" : "Add"}{" "}
+              {dialogState.type}
             </Button>
           </div>
         </DialogContent>
@@ -315,24 +398,24 @@ export const AdminManagement = ({ onDataUpdate }: AdminManagementProps) => {
   );
 };
 
-const ManagementCard = ({ 
-  title, 
-  items, 
-  type, 
+const ManagementCard = ({
+  title,
+  items,
+  type,
   icon: Icon,
   onAdd,
   onEdit,
   onDelete,
-  renderExtraInfo
-}: { 
-  title: string; 
-  items: ManagementItem[]; 
+  renderExtraInfo,
+}: {
+  title: string;
+  items: Array<School | College | Batch>;
   type: "school" | "college" | "batch";
   icon: any;
   onAdd: () => void;
-  onEdit: (item: ManagementItem) => void;
+  onEdit: (item: any) => void;
   onDelete: (id: string) => void;
-  renderExtraInfo?: (item: ManagementItem) => React.ReactNode;
+  renderExtraInfo?: (item: any) => React.ReactNode;
 }) => (
   <Card>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -348,10 +431,15 @@ const ManagementCard = ({
     <CardContent>
       <div className="space-y-2 max-h-60 overflow-y-auto">
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No {title.toLowerCase()} added yet</p>
+          <p className="text-sm text-muted-foreground">
+            No {title.toLowerCase()} added yet
+          </p>
         ) : (
-          items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+          items.map((item: any) => (
+            <div
+              key={item.id}
+              className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
+            >
               <div className="flex-1">
                 <span className="text-sm font-medium">{item.name}</span>
                 {renderExtraInfo?.(item)}
@@ -386,3 +474,7 @@ const ManagementCard = ({
     </CardContent>
   </Card>
 );
+
+function capitalize<T extends string>(s: T): Capitalize<T> {
+  return (s.charAt(0).toUpperCase() + s.slice(1)) as Capitalize<T>;
+}
