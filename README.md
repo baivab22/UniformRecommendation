@@ -60,6 +60,21 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Backend (MongoDB + Express)
+
+Located in `backend/`.
+
+Setup:
+
+```sh
+cd backend
+cp .env.example .env   # update MONGODB_URI and JWT_SECRET
+npm install
+npm run dev             # starts on http://localhost:4000
+```
+
+Frontend dev server proxies `/api` to `http://localhost:4000` (see `vite.config.ts`). If you change the backend port, update `VITE_API_URL` in `.env.local` or adjust the proxy.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/8c851de5-397b-4273-89ba-ac363357c302) and click on Share -> Publish.
@@ -71,3 +86,5 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+# UniformRecommendation
+# UniformRecommendation
