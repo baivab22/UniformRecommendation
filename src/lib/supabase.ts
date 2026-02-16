@@ -1,12 +1,37 @@
-import { createClient } from "@supabase/supabase-js";
+// MongoDB API client
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
-// These would normally come from environment variables
-// For now, using placeholder values - you'll need to replace with your actual Supabase project credentials
-const supabaseUrl = "https://tfstomfqybhxcdgledvs.supabase.co";
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmc3RvbWZxeWJoeGNkZ2xlZHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMzg5MzksImV4cCI6MjA2NzcxNDkzOX0.gti5DjtvJyEQIjy1BGmr-qHW3UjRVe5bSO7sIZLf8i4";
+export const getAuthToken = () => localStorage.getItem('authToken');
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const setAuthToken = (token: string) => {
+  localStorage.setItem('authToken', token);
+};
+
+export const clearAuthToken = () => {
+  localStorage.removeItem('authToken');
+};
+
+// API wrapper for authenticated requests
+export const apiCall = async (endpoint: string, options: any = {}) => {
+  const token = getAuthToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'API Error' }));
+    throw new Error(error.message || `API Error: ${response.status}`);
+  }
+
+  return response.json();
+};
 
 // Database types
 export type Database = {
@@ -36,48 +61,6 @@ export type Database = {
           shoe_size?: number;
           created_at: string;
           updated_at: string;
-        };
-        Insert: {
-          name: string;
-          email: string;
-          mobile: string;
-          college: string;
-          batch: string;
-          gender: "male" | "female";
-          clothing_type: "shirt" | "pant" | "shoes";
-          age: number;
-          height: number;
-          weight: number;
-          morphology: string;
-          fit_preference: string;
-          collar_size?: string;
-          chest?: number;
-          waist?: number;
-          hip?: number;
-          shoulder?: number;
-          inseam?: number;
-          shoe_size?: number;
-        };
-        Update: {
-          name?: string;
-          email?: string;
-          mobile?: string;
-          college?: string;
-          batch?: string;
-          gender?: "male" | "female";
-          clothing_type?: "shirt" | "pant" | "shoes";
-          age?: number;
-          height?: number;
-          weight?: number;
-          morphology?: string;
-          fit_preference?: string;
-          collar_size?: string;
-          chest?: number;
-          waist?: number;
-          hip?: number;
-          shoulder?: number;
-          inseam?: number;
-          shoe_size?: number;
         };
       };
     };

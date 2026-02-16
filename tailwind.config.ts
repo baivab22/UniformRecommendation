@@ -10,19 +10,15 @@ export default {
 	],
 	prefix: "",
 	theme: {
-		container: {
-			center: true,
-			padding: '2rem',
-			screens: {
-				'2xl': '1400px'
-			}
-		},
+			container: {
+				center: false,
+				padding: '0',
+				screens: {}
+			},
 		extend: {
 			fontFamily: {
-				'poppins': ['Poppins', 'system-ui', '-apple-system', 'sans-serif'],
-				'playfair': ['Playfair Display', 'serif'],
-				'inter': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-				sans: ['Poppins', 'system-ui', '-apple-system', 'sans-serif'],
+				sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'sans-serif'],
+				mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',

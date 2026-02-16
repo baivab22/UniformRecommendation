@@ -21,7 +21,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { UserCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { apiCall } from "@/lib/supabase";
+import { Header } from "@/components/Header";
+import Footer from "@/components/Footer";
 
 type School = { id: string; name: string; created_at?: string };
 type College = { id: string; name: string; created_at?: string };
@@ -36,7 +38,7 @@ const PersonalInfo = () => {
   const [formData, setFormData] = useState({
     name: "",
     mobile: "",
-    email: "",
+    student_id: "",
     college: "",
     batch: "",
     agreeToTerms: false,
@@ -68,27 +70,14 @@ const PersonalInfo = () => {
   const fetchData = async () => {
     try {
       const [schoolsRes, collegesRes, batchesRes] = await Promise.all([
-        supabase
-          .from("schools")
-          .select("*")
-          .order("created_at", { ascending: true }),
-        supabase
-          .from("colleges")
-          .select("*")
-          .order("created_at", { ascending: true }),
-        supabase
-          .from("batches")
-          .select("*")
-          .order("created_at", { ascending: true }),
+        apiCall("/schools"),
+        apiCall("/colleges"),
+        apiCall("/batches"),
       ]);
 
-      if (schoolsRes.error) throw schoolsRes.error;
-      if (collegesRes.error) throw collegesRes.error;
-      if (batchesRes.error) throw batchesRes.error;
-
-      setSchools((schoolsRes.data as School[]) ?? []);
-      setColleges((collegesRes.data as College[]) ?? []);
-      setBatches((batchesRes.data as Batch[]) ?? []);
+      setSchools(schoolsRes ?? []);
+      setColleges(collegesRes ?? []);
+      setBatches(batchesRes ?? []);
     } catch (error: any) {
       console.error("Error fetching data:", error);
       toast({
@@ -110,7 +99,7 @@ const PersonalInfo = () => {
     if (
       !formData.name ||
       !formData.mobile ||
-      !formData.email ||
+      !formData.student_id ||
       !formData.college ||
       !formData.batch
     ) {
@@ -156,24 +145,25 @@ const PersonalInfo = () => {
         )
       );
 
-      const { error } = await supabase.from("students").insert([cleanedData]);
-
-      if (error) throw error;
+      await apiCall("/students", {
+        method: "POST",
+        body: JSON.stringify(cleanedData),
+      });
 
       localStorage.removeItem("measurementData");
 
       toast({
         title: "Success!",
-        description: "Your information has been submitted successfully.",
+        description: "Your information has been submitted. Thank you!",
       });
 
       navigate("/");
-    } catch (error) {
-      console.error("❌ Error submitting to Supabase:", error);
+    } catch (error: any) {
+      console.error("❌ Error submitting:", error);
       toast({
         title: "Submission Failed",
         description:
-          "There was an error submitting your information. Please try again.",
+          error?.message || "There was an error submitting your information. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -182,182 +172,188 @@ const PersonalInfo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-accent/5 to-background p-4">
-      <div className="container mx-auto max-w-2xl">
-        <Card className="shadow-card">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center">
-              <UserCircle className="h-8 w-8 text-white" />
-            </div>
-            <CardTitle className="text-3xl font-semibold">
-              Personal Information
-            </CardTitle>
-            <CardDescription className="text-lg">
-              Please provide your personal details to complete the registration
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header />
+      
+      <div className="flex-grow p-4">
+        <div className="container mx-auto max-w-2xl">
+          <Card className="shadow-card">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary flex items-center justify-center">
+                <UserCircle className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="text-3xl font-semibold text-gray-900">
+                Personal Information
+              </CardTitle>
+              <CardDescription className="text-lg text-gray-600">
+                Complete your profile to finalize your order
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Basic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name *</Label>
+                    <Input
+                      id="name"
+                      placeholder="John Doe"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mobile">Mobile Number *</Label>
+                    <Input
+                      id="mobile"
+                      type="tel"
+                      placeholder="+91 9876543210"
+                      value={formData.mobile}
+                      onChange={(e) =>
+                        handleInputChange("mobile", e.target.value)
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name *</Label>
+                  <Label htmlFor="student_id">Student ID *</Label>
                   <Input
-                    id="name"
-                    placeholder="John Doe"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    id="student_id"
+                    type="text"
+                    placeholder="STU12345"
+                    value={formData.student_id}
+                    onChange={(e) => handleInputChange("student_id", e.target.value)}
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mobile">Mobile Number *</Label>
-                  <Input
-                    id="mobile"
-                    type="tel"
-                    placeholder="+91 9876543210"
-                    value={formData.mobile}
-                    onChange={(e) =>
-                      handleInputChange("mobile", e.target.value)
-                    }
-                    required
-                  />
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="john.doe@example.com"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Academic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* College Select */}
-                <div className="space-y-2">
-                  <Label htmlFor="college">College/Institution *</Label>
-                  <Select
-                    value={
-                      colleges.find((c) => c.name === formData.college)?.id ||
-                      ""
-                    }
-                    onValueChange={(collegeId) => {
-                      const selectedCollege = colleges.find(
-                        (c) => c.id === collegeId
-                      );
-                      handleInputChange("college", selectedCollege?.name || "");
-                      setSelectedCollegeId(collegeId);
-                      handleInputChange("batch", "");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue>
-                        {formData.college || "Select college"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {colleges.length > 0 ? (
-                        colleges.map((college) => (
-                          <SelectItem key={college.id} value={college.id}>
-                            {college.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem disabled value="no-college">
-                          No colleges available
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Batch Select */}
-                <div className="space-y-2">
-                  <Label htmlFor="batch">Batch/Year *</Label>
-                  <Select
-                    value={
-                      batches.find((b) => b.name === formData.batch)?.id || ""
-                    }
-                    onValueChange={(batchId) => {
-                      const selectedBatch = batches.find(
-                        (b) => b.id === batchId
-                      );
-                      handleInputChange("batch", selectedBatch?.name || "");
-                    }}
-                    disabled={!selectedCollegeId}
-                  >
-                    <SelectTrigger>
-                      <SelectValue>
-                        {formData.batch || "Select batch"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {batches.filter(
-                        (batch) => batch.college_id === selectedCollegeId
-                      ).length > 0 ? (
-                        batches
-                          .filter(
-                            (batch) => batch.college_id === selectedCollegeId
-                          )
-                          .map((batch) => (
-                            <SelectItem key={batch.id} value={batch.id}>
-                              {batch.name}
+                {/* Academic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* College Select */}
+                  <div className="space-y-2">
+                    <Label htmlFor="college">College/Institution *</Label>
+                    <Select
+                      value={
+                        colleges.find((c) => c.name === formData.college)?.id ||
+                        ""
+                      }
+                      onValueChange={(collegeId) => {
+                        const selectedCollege = colleges.find(
+                          (c) => c.id === collegeId
+                        );
+                        handleInputChange("college", selectedCollege?.name || "");
+                        setSelectedCollegeId(collegeId);
+                        handleInputChange("batch", "");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue>
+                          {formData.college || "Select college"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {colleges.length > 0 ? (
+                          colleges.map((college) => (
+                            <SelectItem key={college.id} value={college.id}>
+                              {college.name}
                             </SelectItem>
                           ))
-                      ) : (
-                        <SelectItem disabled value="no-batch">
-                          No batches available
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                        ) : (
+                          <SelectItem disabled value="no-college">
+                            No colleges available
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {/* Terms & Conditions */}
-              <div className="space-y-4">
-                <div className="rounded-lg border p-4 bg-muted/50">
-                  <h4 className="font-semibold mb-2">Terms & Conditions</h4>
-                  <Textarea
-                    readOnly
-                    className="h-24 resize-none bg-background"
-                    value="By submitting this form, you agree to provide accurate measurements and personal information. This data will be used solely for sizing purposes and will be handled according to our privacy policy. Your information will be securely stored and will not be shared with third parties without your consent."
-                  />
+                  {/* Batch Select */}
+                  <div className="space-y-2">
+                    <Label htmlFor="batch">Batch/Year *</Label>
+                    <Select
+                      value={
+                        batches.find((b) => b.name === formData.batch)?.id || ""
+                      }
+                      onValueChange={(batchId) => {
+                        const selectedBatch = batches.find(
+                          (b) => b.id === batchId
+                        );
+                        handleInputChange("batch", selectedBatch?.name || "");
+                      }}
+                      disabled={!selectedCollegeId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue>
+                          {formData.batch || "Select batch"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {batches.filter(
+                          (batch) => batch.college_id === selectedCollegeId
+                        ).length > 0 ? (
+                          batches
+                            .filter(
+                              (batch) => batch.college_id === selectedCollegeId
+                            )
+                            .map((batch) => (
+                              <SelectItem key={batch.id} value={batch.id}>
+                                {batch.name}
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <SelectItem disabled value="no-batch">
+                            No batches available
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="terms"
-                    checked={formData.agreeToTerms}
-                    onCheckedChange={(checked) =>
-                      handleInputChange("agreeToTerms", !!checked)
-                    }
-                  />
-                  <Label htmlFor="terms" className="text-sm">
-                    I agree to the terms and conditions *
-                  </Label>
-                </div>
-              </div>
 
-              <div className="flex justify-center pt-6">
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={isLoading}
-                  className="bg-gradient-primary hover:shadow-elegant transition-all duration-300 px-8"
-                >
-                  {isLoading ? "Submitting..." : "Submit Information"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                {/* Terms & Conditions */}
+                <div className="space-y-4">
+                  <div className="rounded-lg border p-4 bg-muted/50">
+                    <h4 className="font-semibold mb-2">Terms & Conditions</h4>
+                    <Textarea
+                      readOnly
+                      className="h-24 resize-none bg-background"
+                      value="By submitting this form, you agree to provide accurate measurements and personal information. This data will be used solely for sizing purposes and will be handled according to our privacy policy. Your information will be securely stored and will not be shared with third parties without your consent."
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="terms"
+                      checked={formData.agreeToTerms}
+                      onCheckedChange={(checked) =>
+                        handleInputChange("agreeToTerms", !!checked)
+                      }
+                    />
+                    <Label htmlFor="terms" className="text-sm">
+                      I agree to the terms and conditions *
+                    </Label>
+                  </div>
+                </div>
+
+                <div className="flex justify-center pt-6">
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={isLoading}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-elegant transition-all duration-300 px-8"
+                  >
+                    {isLoading ? "Submitting..." : "Submit Information"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
+      <Footer />
     </div>
   );
 };
