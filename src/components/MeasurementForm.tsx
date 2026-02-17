@@ -1302,7 +1302,7 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
             <Button
               variant="outline"
               onClick={handleBack}
-              className="flex items-center gap-2 border-2 border-blue-200 text-blue-600 hover:bg-blue-50 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base flex-1 min-w-[110px]"
+              className="flex items-center gap-2 border-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-black px-3 py-2 text-sm min-w-fit"
             >
               <ArrowLeft className="h-3 sm:h-4 w-3 sm:w-4" />
               Back
@@ -1313,7 +1313,7 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
             <Button
               variant="ghost"
               onClick={handleSkip}
-              className="px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm text-gray-500 hover:text-gray-700 flex-1 min-w-[110px]"
+              className="px-3 py-2 text-xs text-gray-500 hover:text-white min-w-fit"
             >
               Skip
             </Button>
@@ -1322,7 +1322,7 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
           <Button
             onClick={handleNext}
             disabled={!canProceed()}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base flex-1 min-w-[110px]"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm min-w-fit"
           >
             {currentStepIndex === steps.length - 1 ? "Finish" : "Next"}
           </Button>
