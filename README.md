@@ -70,10 +70,10 @@ Setup:
 cd backend
 cp .env.example .env   # update MONGODB_URI and JWT_SECRET
 npm install
-npm run dev             # starts on http://localhost:4000
+npm run dev             # starts on https://fitform-backend.onrender.com
 ```
 
-Frontend dev server proxies `/api` to `http://localhost:4000` (see `vite.config.ts`). If you change the backend port, update `VITE_API_URL` in `.env.local` or adjust the proxy.
+Frontend dev server proxies `/api` to `https://fitform-backend.onrender.com` (see `vite.config.ts`). If you change the backend port, update `VITE_API_URL` in `.env.local` or adjust the proxy.
 
 ## How can I deploy this project?
 

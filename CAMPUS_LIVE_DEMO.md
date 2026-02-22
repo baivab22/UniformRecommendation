@@ -4,7 +4,7 @@
 
 ### Current Setup
 - **Frontend**: Running at http://localhost:8080
-- **Backend**: Running at http://localhost:4000
+- **Backend**: Running at https://fitform-backend.onrender.com
 - **Database**: MongoDB connected
 
 ---
@@ -244,7 +244,7 @@ Expected:
 ### Test 1: Fetch Colleges with Campuses
 ```javascript
 // Open browser console and run:
-fetch('http://localhost:4000/api/colleges')
+fetch('https://fitform-backend.onrender.com/api/colleges')
   .then(r => r.json())
   .then(data => console.log(JSON.stringify(data, null, 2)))
 ```
@@ -271,7 +271,7 @@ fetch('http://localhost:4000/api/colleges')
 ### Test 2: Create Campus
 ```javascript
 const collegeId = "YOUR_COLLEGE_ID"; // Get from above response
-fetch(`http://localhost:4000/api/colleges/${collegeId}/campuses`, {
+fetch(`https://fitform-backend.onrender.com/api/colleges/${collegeId}/campuses`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -301,7 +301,7 @@ fetch(`http://localhost:4000/api/colleges/${collegeId}/campuses`, {
 ```javascript
 const collegeId = "YOUR_COLLEGE_ID";
 const campusId = "CAMPUS_ID";
-fetch(`http://localhost:4000/api/colleges/${collegeId}/campuses/${campusId}`, {
+fetch(`https://fitform-backend.onrender.com/api/colleges/${collegeId}/campuses/${campusId}`, {
   method: 'PUT',
   headers: {
     'Content-Type': 'application/json',
@@ -328,7 +328,7 @@ fetch(`http://localhost:4000/api/colleges/${collegeId}/campuses/${campusId}`, {
 ```javascript
 const collegeId = "YOUR_COLLEGE_ID";
 const campusId = "CAMPUS_ID";
-fetch(`http://localhost:4000/api/colleges/${collegeId}/campuses/${campusId}`, {
+fetch(`https://fitform-backend.onrender.com/api/colleges/${collegeId}/campuses/${campusId}`, {
   method: 'DELETE',
   headers: {
     'Authorization': 'Bearer YOUR_AUTH_TOKEN'
@@ -382,7 +382,7 @@ GET /api/colleges    ← Refresh data
 ## ✅ Demo Verification Checklist
 
 - [ ] Frontend loads at http://localhost:8080
-- [ ] Backend API responds at http://localhost:4000/api/colleges
+- [ ] Backend API responds at https://fitform-backend.onrender.com/api/colleges
 - [ ] Can expand/collapse colleges
 - [ ] Can add campus to college
 - [ ] Campus appears immediately in list

@@ -185,7 +185,7 @@ Status: Compiled & Running ✓
 
 ### ✅ Both Servers
 - [x] Frontend running at http://localhost:8080
-- [x] Backend running at http://localhost:4000
+- [x] Backend running at https://fitform-backend.onrender.com
 - [x] Hot reload working
 - [x] Auto-restart on file change working
 - [x] No errors in logs

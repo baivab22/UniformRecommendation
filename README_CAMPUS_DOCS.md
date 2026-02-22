@@ -252,7 +252,7 @@ npm run dev
 open http://localhost:8080
 
 # Test API
-curl http://localhost:4000/api/colleges
+curl https://fitform-backend.onrender.com/api/colleges
 ```
 
 ---

@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       "/api": {
-        target: "http://localhost:4000",
+        target: "https://fitform-backend.onrender.com",
         changeOrigin: true,
       },
     },

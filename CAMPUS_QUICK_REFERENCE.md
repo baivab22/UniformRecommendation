@@ -42,7 +42,7 @@ College {
 ### Create Campus
 **Request:**
 ```bash
-POST http://localhost:4000/api/colleges/60d5ec49c1234567890abcd1/campuses
+POST https://fitform-backend.onrender.com/api/colleges/60d5ec49c1234567890abcd1/campuses
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -66,7 +66,7 @@ Content-Type: application/json
 ### Update Campus
 **Request:**
 ```bash
-PUT http://localhost:4000/api/colleges/60d5ec49c1234567890abcd1/campuses/65a8b2d1e4f5g6h7i8j9k0l1
+PUT https://fitform-backend.onrender.com/api/colleges/60d5ec49c1234567890abcd1/campuses/65a8b2d1e4f5g6h7i8j9k0l1
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -87,7 +87,7 @@ Content-Type: application/json
 ### Delete Campus
 **Request:**
 ```bash
-DELETE http://localhost:4000/api/colleges/60d5ec49c1234567890abcd1/campuses/65a8b2d1e4f5g6h7i8j9k0l1
+DELETE https://fitform-backend.onrender.com/api/colleges/60d5ec49c1234567890abcd1/campuses/65a8b2d1e4f5g6h7i8j9k0l1
 Authorization: Bearer <token>
 ```
 
@@ -101,7 +101,7 @@ Authorization: Bearer <token>
 ### Get All Colleges
 **Request:**
 ```bash
-GET http://localhost:4000/api/colleges
+GET https://fitform-backend.onrender.com/api/colleges
 ```
 
 **Response:**
@@ -287,7 +287,7 @@ npm run dev
 npm run build
 
 # Test API manually
-curl http://localhost:4000/api/colleges
+curl https://fitform-backend.onrender.com/api/colleges
 
 # View frontend
 open http://localhost:8080

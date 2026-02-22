@@ -1,5 +1,5 @@
 // MongoDB API client
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://fitform-backend.onrender.com/api';
 
 export const getAuthToken = () => localStorage.getItem('authToken');
 
