@@ -1298,34 +1298,38 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
         )}
 
         <div className="flex flex-row flex-wrap justify-between items-center pt-6 sm:pt-8 gap-3 sm:gap-4 border-t border-blue-100 w-full">
-          {currentStepIndex > 0 && (
+          {/* Back button always at the far left */}
+          <div className="flex-1 min-w-[90px] flex items-center">
+            {currentStepIndex > 0 && (
+              <Button
+                type="button"
+                onClick={handleBack}
+                className="flex items-center gap-2 px-3 py-2 text-xs font-semibold min-w-fit bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-black border border-gray-300 shadow-sm transition-colors duration-200"
+              >
+                <ArrowLeft className="h-3 sm:h-4 w-3 sm:w-4" />
+                Back
+              </Button>
+            )}
+          </div>
+          {/* Skip and Next side by side, right aligned */}
+          <div className="flex flex-row gap-3 min-w-[180px] justify-end">
+            {currentStep !== "recommendation" && (
+              <Button
+                type="button"
+                onClick={handleSkip}
+                className="px-3 py-2 text-xs font-semibold min-w-fit bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-black border border-gray-300 shadow-sm transition-colors duration-200"
+              >
+                Skip
+              </Button>
+            )}
             <Button
-              variant="outline"
-              onClick={handleBack}
-              className="flex items-center gap-2 border-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-black px-3 py-2 text-sm min-w-fit"
+              onClick={handleNext}
+              disabled={!canProceed()}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm min-w-fit"
             >
-              <ArrowLeft className="h-3 sm:h-4 w-3 sm:w-4" />
-              Back
+              {currentStepIndex === steps.length - 1 ? "Finish" : "Next"}
             </Button>
-          )}
-
-          {currentStep !== "recommendation" && (
-            <Button
-              variant="ghost"
-              onClick={handleSkip}
-              className="px-3 py-2 text-xs text-gray-500 hover:text-white min-w-fit"
-            >
-              Skip
-            </Button>
-          )}
-
-          <Button
-            onClick={handleNext}
-            disabled={!canProceed()}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm min-w-fit"
-          >
-            {currentStepIndex === steps.length - 1 ? "Finish" : "Next"}
-          </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

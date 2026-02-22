@@ -112,30 +112,43 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Stats Section (static, no scrolling) */}
-      <section className="py-16 bg-primary/10 border-b border-primary/20">
-        <div className="container mx-auto px-6 md:px-8 w-[95vw]">
+      {/* Stats Section (animated marquee) */}
+      <section className="py-16 bg-primary/10 border-b border-primary/20 overflow-hidden">
+        <div className="container mx-auto px-0 md:px-8 w-full">
           <div className="relative" ref={statsRef} data-scroll-animate>
-            <div className="flex flex-wrap justify-center gap-16 px-2">
-              <div className="flex flex-col items-center min-w-[220px]">
-                <div className="text-3xl md:text-4xl font-bold text-blue-600">50K+</div>
-                <p className="text-gray-600 mt-2">Students Sized</p>
-              </div>
-              <div className="flex flex-col items-center min-w-[220px]">
-                <div className="text-3xl md:text-4xl font-bold text-blue-600">95%</div>
-                <p className="text-gray-600 mt-2">Accuracy Rate</p>
-              </div>
-              <div className="flex flex-col items-center min-w-[220px]">
-                <div className="text-3xl md:text-4xl font-bold text-orange-600">2 Min</div>
-                <p className="text-gray-600 mt-2">Quick Sizing</p>
-              </div>
-              <div className="flex flex-col items-center min-w-[220px]">
-                <div className="text-3xl md:text-4xl font-bold text-blue-600">100+</div>
-                <p className="text-gray-600 mt-2">Colleges</p>
+            <div className="w-full overflow-hidden">
+              <div
+                className="flex gap-16 animate-marquee whitespace-nowrap"
+                style={{ animation: 'marquee 18s linear infinite' }}
+              >
+                {/* Stats block, duplicated for seamless loop */}
+                {[
+                  { value: '50K+', label: 'Students Sized', color: 'text-blue-600' },
+                  { value: '95%', label: 'Accuracy Rate', color: 'text-blue-600' },
+                  { value: '2 Min', label: 'Quick Sizing', color: 'text-orange-600' },
+                  { value: '100+', label: 'Colleges', color: 'text-blue-600' },
+                ].concat([
+                  { value: '50K+', label: 'Students Sized', color: 'text-blue-600' },
+                  { value: '95%', label: 'Accuracy Rate', color: 'text-blue-600' },
+                  { value: '2 Min', label: 'Quick Sizing', color: 'text-orange-600' },
+                  { value: '100+', label: 'Colleges', color: 'text-blue-600' },
+                ]).map((stat, idx) => (
+                  <div key={idx} className="flex flex-col items-center min-w-[220px]">
+                    <div className={`text-3xl md:text-4xl font-bold ${stat.color}`}>{stat.value}</div>
+                    <p className="text-gray-600 mt-2">{stat.label}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
+        {/* Marquee keyframes (Tailwind doesn't support custom keyframes inline, so add to global styles if not present) */}
+        <style>{`
+          @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        `}</style>
       </section>
 
       {/* How It Works */}
@@ -346,7 +359,7 @@ const Index = () => {
             <div className="flex flex-col gap-4 w-full max-w-xs mx-auto">
               <Button
                 size="lg"
-                className="bg-white text-amber-600 hover:bg-white/90 px-8 py-3 text-lg font-semibold rounded-full shadow-xl transition-all"
+                className="bg-white text-amber-600 hover:bg-black hover:text-white px-8 py-3 text-lg font-semibold rounded-full shadow-xl transition-all"
                 asChild
               >
                 <Link to="/student-form" className="inline-flex items-center justify-center w-full">
