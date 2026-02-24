@@ -54,8 +54,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
+  const { toast } = useToast();
   const [students, setStudents] = useState<any[]>([]);
   const [colleges, setColleges] = useState<any[]>([]);
   const [batches, setBatches] = useState<any[]>([]);
@@ -73,15 +75,34 @@ const AdminDashboard = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const navigate = useNavigate();
 
+  console.log(orderHistory, "order history data in admin dashboard");
+
   // ✅ Fetch functions
-    const fetchOrderHistory = async () => {
-      try {
-        const data = await apiCall("/order-history");
-        setOrderHistory(data || []);
-      } catch (error: any) {
-        console.error("Error fetching order history:", error);
+  const fetchOrderHistory = async () => {
+    try {
+      const data = await apiCall("/order-history");
+      setOrderHistory(data);
+    } catch (error: any) {
+      if (error.message && (error.message.includes('Unauthorized') || error.message.includes('Invalid token'))) {
+        toast({
+          title: "Session expired",
+          description: "Please log in again to view order history.",
+          variant: "destructive",
+        });
+        localStorage.removeItem('isAdminAuthenticated');
+        setTimeout(() => navigate('/admin-login'), 1000);
+      } else {
+        toast({
+          title: "Failed to fetch order history",
+          description: error.message || "Unknown error",
+          variant: "destructive",
+        });
+        setActiveTab("orderhistory");
       }
-    };
+      setOrderHistory([]);
+      console.error("Error fetching order history:", error);
+    }
+  };
   const fetchStudents = async () => {
     try {
       const data = await apiCall("/students");
@@ -335,7 +356,7 @@ const AdminDashboard = () => {
             onValueChange={setActiveTab}
             className="space-y-6"
           >
-            <TabsList className="grid w-full grid-cols-2 bg-gray-100 border border-blue-200 rounded-lg p-1">
+            <TabsList className="grid w-full grid-cols-3 bg-gray-100 border border-blue-200 rounded-lg p-1">
               <TabsTrigger 
                 value="dashboard" 
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-all"
@@ -351,7 +372,7 @@ const AdminDashboard = () => {
                 Management
               </TabsTrigger>
               <TabsTrigger
-                value="order-history"
+                value="orderhistory"
                 className="flex items-center gap-2 data-[state=active]:bg-yellow-500 data-[state=active]:text-white rounded-md transition-all"
               >
                 <Trash2 className="h-4 w-4" />
@@ -360,99 +381,7 @@ const AdminDashboard = () => {
             </TabsList>
 
             <TabsContent value="dashboard" className="space-y-6">
-            <TabsContent value="order-history" className="space-y-6">
-              <div className="bg-white border border-yellow-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="p-6 border-b border-yellow-200 flex flex-col md:flex-row md:justify-between md:items-center gap-2">
-                  <h3 className="text-lg font-semibold text-yellow-700 flex items-center gap-2">
-                    <Trash2 className="h-5 w-5" /> Order History (Deleted Orders)
-                  </h3>
-                  <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">
-                    Showing {orderHistory.length} deleted orders
-                  </span>
-                </div>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-yellow-50">
-                        <TableHead>Order ID</TableHead>
-                        <TableHead>User ID</TableHead>
-                        <TableHead>Deleted At</TableHead>
-                        <TableHead>Reason</TableHead>
-                        <TableHead>Details</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {orderHistory.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center text-gray-400 py-8">No deleted orders found</TableCell>
-                        </TableRow>
-                      ) : (
-                        orderHistory.slice((currentPage-1)*itemsPerPage, currentPage*itemsPerPage).map((order: any) => (
-                          <TableRow key={order._id}>
-                            <TableCell>{order.orderId}</TableCell>
-                            <TableCell>{order.userId}</TableCell>
-                            <TableCell>{new Date(order.deletedAt).toLocaleString()}</TableCell>
-                            <TableCell>{order.reason}</TableCell>
-                            <TableCell>
-                              <details>
-                                <summary className="cursor-pointer text-blue-600 hover:underline select-none">View</summary>
-                                <pre className="text-xs bg-gray-100 rounded p-2 mt-2 max-w-xs md:max-w-md lg:max-w-lg overflow-x-auto">
-                                  {JSON.stringify(order.items, null, 2)}
-                                </pre>
-                              </details>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-                {/* Pagination for order history */}
-                {orderHistory.length > itemsPerPage && (
-                  <div className="p-4 border-t border-yellow-200 flex justify-between items-center flex-wrap gap-4 bg-yellow-50">
-                    <div className="text-sm text-yellow-700 font-medium">
-                      Showing <span className="font-semibold text-yellow-900">{Math.min(currentPage*itemsPerPage, orderHistory.length)}</span> of <span className="font-semibold text-yellow-900">{orderHistory.length}</span> orders
-                    </div>
-                    <div className="flex justify-center items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                        disabled={currentPage === 1}
-                        className="text-xs"
-                      >
-                        ← Previous
-                      </Button>
-                      <div className="flex gap-1">
-                        {Array.from({ length: Math.ceil(orderHistory.length/itemsPerPage) }, (_, i) => i + 1).map(page => (
-                          <Button
-                            key={page}
-                            variant={currentPage === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(page)}
-                            className={`text-xs w-8 h-8 p-0 ${currentPage === page ? 'bg-yellow-500 text-white' : ''}`}
-                          >
-                            {page}
-                          </Button>
-                        ))}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage(Math.min(Math.ceil(orderHistory.length/itemsPerPage), currentPage + 1))}
-                        disabled={currentPage === Math.ceil(orderHistory.length/itemsPerPage)}
-                        className="text-xs"
-                      >
-                        Next →
-                      </Button>
-                    </div>
-                    <div className="text-sm text-yellow-700">
-                      Page <span className="font-semibold text-yellow-900">{currentPage}</span> of <span className="font-semibold text-yellow-900">{Math.ceil(orderHistory.length/itemsPerPage)}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
+      
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {/* Total Students */}
@@ -852,6 +781,158 @@ const AdminDashboard = () => {
               onDataUpdate={refreshAllData}
             />
           </TabsContent>
+
+                <TabsContent value="orderhistory" className="space-y-6">
+              <div className="bg-white border border-yellow-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="p-6 border-b border-yellow-200 flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+                  <h3 className="text-lg font-semibold text-yellow-700 flex items-center gap-2">
+                    <Trash2 className="h-5 w-5" /> Order History (Deleted Orders)
+                  </h3>
+                  <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">
+                    Showing {orderHistory.length} deleted orders
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-yellow-200 bg-yellow-50">
+                        <th className="px-6 py-4 text-left text-yellow-700 font-semibold">Name</th>
+                        <th className="px-6 py-4 text-left text-yellow-700 font-semibold">Student ID</th>
+                        <th className="px-6 py-4 text-left text-yellow-700 font-semibold">College</th>
+                        <th className="px-6 py-4 text-left text-yellow-700 font-semibold">Batch</th>
+                        <th className="px-6 py-4 text-left text-yellow-700 font-semibold">Gender</th>
+                        <th className="px-6 py-4 text-left text-yellow-700 font-semibold">Recommended Sizes</th>
+                        <th className="px-6 py-4 text-left text-yellow-700 font-semibold">Measurements</th>
+                        <th className="px-6 py-4 text-left text-yellow-700 font-semibold">Deleted At</th>
+                        <th className="px-6 py-4 text-left text-yellow-700 font-semibold">Reason</th>
+                        <th className="px-6 py-4 text-left text-yellow-700 font-semibold">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-yellow-100">
+                      {orderHistory.length === 0 ? (
+                        <tr>
+                          <td colSpan={9} className="px-6 py-8 text-center text-gray-400">No deleted orders found</td>
+                        </tr>
+                      ) : (
+                        orderHistory.slice((currentPage-1)*itemsPerPage, currentPage*itemsPerPage).map((order: any) => {
+                          const student = order.items && order.items[0] ? order.items[0] : {};
+                          const shirtSize = student.chest ? (student.chest <= 36 ? "S" : student.chest <= 40 ? "M" : student.chest <= 44 ? "L" : student.chest <= 48 ? "XL" : "XXL") : null;
+                          const pantSize = student.waist ? (student.waist <= 30 ? "30" : student.waist <= 32 ? "32" : student.waist <= 34 ? "34" : student.waist <= 36 ? "36" : student.waist <= 38 ? "38" : "40+") : null;
+                          return (
+                            <tr key={order._id} className="hover:bg-yellow-50 transition-colors">
+                              <td className="px-6 py-4">
+                                <div>
+                                  <div className="font-medium text-yellow-900">{student.name || '-'}</div>
+                                  <div className="text-yellow-700 text-xs">{student.student_id || '-'}</div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-yellow-700">{student.student_id || '-'}</td>
+                              <td className="px-6 py-4 text-yellow-700">{student.college || '-'}</td>
+                              <td className="px-6 py-4 text-yellow-700">{student.batch || '-'}</td>
+                              <td className="px-6 py-4">
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${student.gender === "male" ? "bg-blue-100 text-blue-700" : student.gender === "female" ? "bg-pink-100 text-pink-700" : "bg-gray-100 text-gray-700"}`}>{student.gender || '-'}</span>
+                              </td>
+                              <td className="px-6 py-4 text-sm">
+                                <div className="space-y-1">
+                                  {shirtSize && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-gray-500 w-12">Shirt:</span>
+                                      <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">{shirtSize}</span>
+                                    </div>
+                                  )}
+                                  {pantSize && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-gray-500 w-12">Pant:</span>
+                                      <span className="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">{pantSize}</span>
+                                    </div>
+                                  )}
+                                  {student.shoe_size && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-gray-500 w-12">Shoe (UK):</span>
+                                      <span className="inline-block px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium">{student.shoe_size}</span>
+                                    </div>
+                                  )}
+                                  {!shirtSize && !pantSize && !student.shoe_size && (
+                                    <span className="text-xs text-gray-500 italic">No sizes available</span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-yellow-700 text-xs">
+                                {student.collar_size && <div>Collar: {student.collar_size}"</div>}
+                                {student.chest && <div>Chest: {student.chest}"</div>}
+                                {student.waist && <div>Waist: {student.waist}"</div>}
+                                {student.hip && <div>Hip: {student.hip}"</div>}
+                                {student.foot_length && <div>Foot: {student.foot_length}"</div>}
+                              </td>
+                              <td className="px-6 py-4 text-yellow-700 text-xs">{order.deletedAt ? new Date(order.deletedAt).toLocaleDateString() : '-'}</td>
+                              <td className="px-6 py-4 text-yellow-700 text-xs">{order.reason || '-'}</td>
+                              <td className="px-6 py-4">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedStudent(student);
+                                    setIsViewDialogOpen(true);
+                                  }}
+                                  title="View details"
+                                  className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                >
+                                  <Eye className="h-5 w-5" />
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination for order history */}
+                {orderHistory.length > itemsPerPage && (
+                  <div className="p-4 border-t border-yellow-200 flex justify-between items-center flex-wrap gap-4 bg-yellow-50">
+                    <div className="text-sm text-yellow-700 font-medium">
+                      Showing <span className="font-semibold text-yellow-900">{Math.min(currentPage*itemsPerPage, orderHistory.length)}</span> of <span className="font-semibold text-yellow-900">{orderHistory.length}</span> orders
+                    </div>
+                    <div className="flex justify-center items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="text-xs"
+                      >
+                        ← Previous
+                      </Button>
+                      <div className="flex gap-1">
+                        {Array.from({ length: Math.ceil(orderHistory.length/itemsPerPage) }, (_, i) => i + 1).map(page => (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className={`text-xs w-8 h-8 p-0 ${currentPage === page ? 'bg-yellow-500 text-white' : ''}`}
+                          >
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.min(Math.ceil(orderHistory.length/itemsPerPage), currentPage + 1))}
+                        disabled={currentPage === Math.ceil(orderHistory.length/itemsPerPage)}
+                        className="text-xs"
+                      >
+                        Next →
+                      </Button>
+                    </div>
+                    <div className="text-sm text-yellow-700">
+                      Page <span className="font-semibold text-yellow-900">{currentPage}</span> of <span className="font-semibold text-yellow-900">{Math.ceil(orderHistory.length/itemsPerPage)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
         </Tabs>
 
         {/* Student Details Dialog */}

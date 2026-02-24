@@ -13,7 +13,7 @@ const Footer = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <img src="/pickp-logo.png" alt="Pickp" className="h-10 w-10 object-contain" />
-              <span className="text-xl font-bold text-white">Pickp</span>
+              <span className="text-xl font-bold text-white"></span>
             </div>
             <p className="text-sm text-gray-400">
               Perfect biometric sizing for shirts, pants, and shoes. Find your perfect fit today.
