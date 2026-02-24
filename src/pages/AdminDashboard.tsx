@@ -360,44 +360,99 @@ const AdminDashboard = () => {
             </TabsList>
 
             <TabsContent value="dashboard" className="space-y-6">
-                        <TabsContent value="order-history" className="space-y-6">
-                          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-                              <h3 className="text-lg font-semibold text-gray-900">Order History (Deleted Orders)</h3>
-                              <p className="text-gray-600 text-sm mt-1">
-                                Showing {orderHistory.length} deleted orders
-                              </p>
-                            </div>
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-sm">
-                                <thead>
-                                  <tr className="border-b border-gray-200 bg-gray-50">
-                                    <th className="px-6 py-4 text-left text-gray-700 font-semibold">Order ID</th>
-                                    <th className="px-6 py-4 text-left text-gray-700 font-semibold">User ID</th>
-                                    <th className="px-6 py-4 text-left text-gray-700 font-semibold">Deleted At</th>
-                                    <th className="px-6 py-4 text-left text-gray-700 font-semibold">Reason</th>
-                                    <th className="px-6 py-4 text-left text-gray-700 font-semibold">Details</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                  {orderHistory.map((order: any) => (
-                                    <tr key={order._id}>
-                                      <td className="px-6 py-4">{order.orderId}</td>
-                                      <td className="px-6 py-4">{order.userId}</td>
-                                      <td className="px-6 py-4">{new Date(order.deletedAt).toLocaleString()}</td>
-                                      <td className="px-6 py-4">{order.reason}</td>
-                                      <td className="px-6 py-4">
-                                        <pre className="text-xs bg-gray-100 rounded p-2 overflow-x-auto">
-                                          {JSON.stringify(order.items, null, 2)}
-                                        </pre>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </TabsContent>
+            <TabsContent value="order-history" className="space-y-6">
+              <div className="bg-white border border-yellow-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="p-6 border-b border-yellow-200 flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+                  <h3 className="text-lg font-semibold text-yellow-700 flex items-center gap-2">
+                    <Trash2 className="h-5 w-5" /> Order History (Deleted Orders)
+                  </h3>
+                  <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">
+                    Showing {orderHistory.length} deleted orders
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-yellow-50">
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>User ID</TableHead>
+                        <TableHead>Deleted At</TableHead>
+                        <TableHead>Reason</TableHead>
+                        <TableHead>Details</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {orderHistory.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-gray-400 py-8">No deleted orders found</TableCell>
+                        </TableRow>
+                      ) : (
+                        orderHistory.slice((currentPage-1)*itemsPerPage, currentPage*itemsPerPage).map((order: any) => (
+                          <TableRow key={order._id}>
+                            <TableCell>{order.orderId}</TableCell>
+                            <TableCell>{order.userId}</TableCell>
+                            <TableCell>{new Date(order.deletedAt).toLocaleString()}</TableCell>
+                            <TableCell>{order.reason}</TableCell>
+                            <TableCell>
+                              <details>
+                                <summary className="cursor-pointer text-blue-600 hover:underline select-none">View</summary>
+                                <pre className="text-xs bg-gray-100 rounded p-2 mt-2 max-w-xs md:max-w-md lg:max-w-lg overflow-x-auto">
+                                  {JSON.stringify(order.items, null, 2)}
+                                </pre>
+                              </details>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                {/* Pagination for order history */}
+                {orderHistory.length > itemsPerPage && (
+                  <div className="p-4 border-t border-yellow-200 flex justify-between items-center flex-wrap gap-4 bg-yellow-50">
+                    <div className="text-sm text-yellow-700 font-medium">
+                      Showing <span className="font-semibold text-yellow-900">{Math.min(currentPage*itemsPerPage, orderHistory.length)}</span> of <span className="font-semibold text-yellow-900">{orderHistory.length}</span> orders
+                    </div>
+                    <div className="flex justify-center items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="text-xs"
+                      >
+                        ← Previous
+                      </Button>
+                      <div className="flex gap-1">
+                        {Array.from({ length: Math.ceil(orderHistory.length/itemsPerPage) }, (_, i) => i + 1).map(page => (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className={`text-xs w-8 h-8 p-0 ${currentPage === page ? 'bg-yellow-500 text-white' : ''}`}
+                          >
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.min(Math.ceil(orderHistory.length/itemsPerPage), currentPage + 1))}
+                        disabled={currentPage === Math.ceil(orderHistory.length/itemsPerPage)}
+                        className="text-xs"
+                      >
+                        Next →
+                      </Button>
+                    </div>
+                    <div className="text-sm text-yellow-700">
+                      Page <span className="font-semibold text-yellow-900">{currentPage}</span> of <span className="font-semibold text-yellow-900">{Math.ceil(orderHistory.length/itemsPerPage)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {/* Total Students */}
