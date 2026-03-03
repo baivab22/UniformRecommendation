@@ -371,37 +371,51 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
     const adjustedShirtSize = getAdjustedSize(baseShirtSize, formData.shirtFit);
 
     function recommendPantSize({ waistInch = null, waistCM = null, fitPreference = "regular" }) {
-      // Normalize fit preference to match chart keys
-      const fit = fitPreference && ["tight", "loose"].includes(fitPreference) ? fitPreference : "regular";
-      
-      const chart = waistInch !== null 
-        ? PANT_SIZE_CHART.waist_inch[fit as keyof typeof PANT_SIZE_CHART.waist_inch]
-        : PANT_SIZE_CHART.waist_cm[fit as keyof typeof PANT_SIZE_CHART.waist_cm];
-      
-      const measurement = waistInch !== null ? waistInch : waistCM;
+      const measurement = waistInch ?? waistCM;
+      if (measurement == null) return "Unknown";
 
-      if (!measurement || !chart) return "Unknown";
+      const fit =
+        fitPreference === "tight" || fitPreference === "loose"
+          ? fitPreference
+          : "regular";
 
-      // First try to find exact match within range
-      let matchedSize = chart.find(
+      const chart =
+        waistInch != null
+          ? PANT_SIZE_CHART.waist_inch[fit as keyof typeof PANT_SIZE_CHART.waist_inch]
+          : PANT_SIZE_CHART.waist_cm[fit as keyof typeof PANT_SIZE_CHART.waist_cm];
+
+      if (!chart?.length) return "Unknown";
+
+      // 1️⃣ Find all matching sizes (important for overlapping ranges)
+      const matches = chart.filter(
         (entry) => measurement >= entry.min && measurement <= entry.max
       );
 
-      if (matchedSize) return matchedSize.size;
+      if (matches.length === 1) {
+        return matches[0].size;
+      }
 
-      // If no exact match, find closest size by rounding to nearest
+      if (matches.length > 1) {
+        if (fit === "tight") return matches[0].size;
+        if (fit === "loose") return matches[matches.length - 1].size;
+
+        // regular → choose larger (safer ecommerce logic)
+        return matches[matches.length - 1].size;
+      }
+
+      // 2️⃣ No direct match → choose closest by center point
       let closest = chart[0];
-      let minDifference = Math.abs(measurement - chart[0].min);
+      let smallestDiff = Math.abs(
+        measurement - (chart[0].min + chart[0].max) / 2
+      );
 
       for (let i = 1; i < chart.length; i++) {
-        const entry = chart[i];
-        const distanceToMin = Math.abs(measurement - entry.min);
-        const distanceToMax = Math.abs(measurement - entry.max);
-        const minDistance = Math.min(distanceToMin, distanceToMax);
+        const center = (chart[i].min + chart[i].max) / 2;
+        const diff = Math.abs(measurement - center);
 
-        if (minDistance < minDifference) {
-          minDifference = minDistance;
-          closest = entry;
+        if (diff < smallestDiff) {
+          smallestDiff = diff;
+          closest = chart[i];
         }
       }
 
