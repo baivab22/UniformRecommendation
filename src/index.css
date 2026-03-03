@@ -53,7 +53,7 @@
   transform: translateY(0) !important;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geom:ital,wght@0,300..900;1,300..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -61,12 +61,25 @@
 /* Beautiful design system for student sizing app */
 
 * {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: 'kern' 1;
   font-kerning: normal;
+}
+
+.geom-default {
+  font-family: "Geom", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.open-sans-default {
+  font-family: "Open Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
 }
 
 @layer base {
@@ -172,8 +185,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont,
-      "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
-      "Droid Sans", "Helvetica Neue", sans-serif;
+    font-family: "Open Sans", system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
   }
 }

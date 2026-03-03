@@ -17,7 +17,10 @@ export default {
 			},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'sans-serif'],
+				sans: ['Open Sans', 'Geom', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],
+				geom: ['Geom', 'sans-serif'],
+				openSans: ['Open Sans', 'sans-serif'],
+				playfair: ['Open Sans', 'sans-serif'],
 				mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
 			},
 			colors: {
