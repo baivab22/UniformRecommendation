@@ -224,6 +224,16 @@ const AdminDashboard = () => {
     return "40+";
   };
 
+  const getStoredShirtSize = (student: any) => {
+    if (student.shirtSize) return student.shirtSize;
+    return student.chest ? calculateShirtSize(student) : null;
+  };
+
+  const getStoredPantSize = (student: any) => {
+    if (student.pantSize) return student.pantSize;
+    return student.waist ? calculatePantSize(student) : null;
+  };
+
   // ✅ Filters
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
@@ -307,8 +317,8 @@ const AdminDashboard = () => {
       student.college,
       student.batch,
       student.gender,
-      student.chest ? calculateShirtSize(student) : 'N/A',
-      student.waist ? calculatePantSize(student) : 'N/A',
+      getStoredShirtSize(student) || 'N/A',
+      getStoredPantSize(student) || 'N/A',
       student.shoe_size || 'N/A',
       student.chest || '',
       student.waist || '',
@@ -616,7 +626,10 @@ const AdminDashboard = () => {
                         </td>
                       </tr>
                     ) : (
-                      paginatedStudents.map((student) => (
+                      paginatedStudents.map((student) => {
+                        const shirtSize = getStoredShirtSize(student);
+                        const pantSize = getStoredPantSize(student);
+                        return (
                         <tr key={student.id} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4">
                             <div>
@@ -637,19 +650,19 @@ const AdminDashboard = () => {
                           </td>
                           <td className="px-6 py-4 text-sm">
                             <div className="space-y-1">
-                              {student.chest && (
+                              {shirtSize && (
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-gray-500 w-12">Shirt:</span>
                                   <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
-                                    {calculateShirtSize(student)}
+                                    {shirtSize}
                                   </span>
                                 </div>
                               )}
-                              {student.waist && (
+                              {pantSize && (
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-gray-500 w-12">Pant:</span>
                                   <span className="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">
-                                    {calculatePantSize(student)}
+                                    {pantSize}
                                   </span>
                                 </div>
                               )}
@@ -661,7 +674,7 @@ const AdminDashboard = () => {
                                   </span>
                                 </div>
                               )}
-                              {!student.chest && !student.waist && !student.shoe_size && (
+                              {!shirtSize && !pantSize && !student.shoe_size && (
                                 <span className="text-xs text-gray-500 italic">No sizes available</span>
                               )}
                             </div>
@@ -719,7 +732,8 @@ const AdminDashboard = () => {
                             </div>
                           </td>
                         </tr>
-                      ))
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -816,8 +830,8 @@ const AdminDashboard = () => {
                       ) : (
                         orderHistory.slice((currentPage-1)*itemsPerPage, currentPage*itemsPerPage).map((order: any) => {
                           const student = order.items && order.items[0] ? order.items[0] : {};
-                          const shirtSize = student.chest ? (student.chest <= 36 ? "S" : student.chest <= 40 ? "M" : student.chest <= 44 ? "L" : student.chest <= 48 ? "XL" : "XXL") : null;
-                          const pantSize = student.waist ? (student.waist <= 30 ? "30" : student.waist <= 32 ? "32" : student.waist <= 34 ? "34" : student.waist <= 36 ? "36" : student.waist <= 38 ? "38" : "40+") : null;
+                          const shirtSize = student.shirtSize || (student.chest ? (student.chest <= 36 ? "S" : student.chest <= 40 ? "M" : student.chest <= 44 ? "L" : student.chest <= 48 ? "XL" : "XXL") : null);
+                          const pantSize = student.pantSize || (student.waist ? (student.waist <= 30 ? "30" : student.waist <= 32 ? "32" : student.waist <= 34 ? "34" : student.waist <= 36 ? "36" : student.waist <= 38 ? "38" : "40+") : null);
                           return (
                             <tr key={order._id} className="hover:bg-yellow-50 transition-colors">
                               <td className="px-6 py-4">
@@ -999,18 +1013,18 @@ const AdminDashboard = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Recommended Sizes</h3>
                   <div className="grid grid-cols-3 gap-4">
-                    {selectedStudent.chest && (
+                    {getStoredShirtSize(selectedStudent) && (
                       <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg text-center">
                         <Shirt className="h-6 w-6 text-purple-600 mx-auto mb-2" />
                         <p className="text-xs text-gray-600 mb-1">Shirt Size</p>
-                        <p className="text-2xl font-bold text-purple-700">{calculateShirtSize(selectedStudent)}</p>
+                        <p className="text-2xl font-bold text-purple-700">{getStoredShirtSize(selectedStudent)}</p>
                       </div>
                     )}
-                    {selectedStudent.waist && (
+                    {getStoredPantSize(selectedStudent) && (
                       <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-lg text-center">
                         <ShoppingBag className="h-6 w-6 text-emerald-600 mx-auto mb-2" />
                         <p className="text-xs text-gray-600 mb-1">Pant Size</p>
-                        <p className="text-2xl font-bold text-emerald-700">{calculatePantSize(selectedStudent)}</p>
+                        <p className="text-2xl font-bold text-emerald-700">{getStoredPantSize(selectedStudent)}</p>
                       </div>
                     )}
                     {selectedStudent.shoe_size && (

@@ -119,7 +119,7 @@ const PANT_SIZE_CHART = {
 const SHOE_SIZE_CHART = {
   men: {
     label: "Men",
-    uk_sizes: [3, 3.5, 4, 5, 6, 7, 7.5, 8, 9, 10, 10.5, 11, 12, 13]
+    uk_sizes: [3, 4, 5, 6, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 13, 14]
   },
   women: {
     label: "Women",
@@ -422,61 +422,11 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
       fitPreference: formData.pantFit,
     });
 
-    // Calculate shoe size based on foot length in CM - UK sizing
-    const getUKShoeSize = (footLengthCM: number, gender: "male" | "female"): string => {
-      const maleShoeChart = [
-        { cm: 23, uk: "3" },
-        { cm: 23.5, uk: "3.5" },
-        { cm: 24, uk: "4" },
-        { cm: 25, uk: "5" },
-        { cm: 25.5, uk: "6" },
-        { cm: 26, uk: "7" },
-        { cm: 26.5, uk: "7.5" },
-        { cm: 27, uk: "8" },
-        { cm: 28, uk: "9" },
-        { cm: 28.5, uk: "10" },
-        { cm: 29.5, uk: "10.5" },
-        { cm: 30, uk: "11" },
-        { cm: 31, uk: "12" },
-        { cm: 31.5, uk: "13" },
-      ];
-
-      const femaleShoeChart = [
-        { cm: 23, uk: "3" },
-        { cm: 23.5, uk: "3.5" },
-        { cm: 24, uk: "4" },
-        { cm: 25, uk: "5" },
-        { cm: 25.5, uk: "6" },
-        { cm: 26, uk: "6.5" },
-        { cm: 26.5, uk: "7" },
-        { cm: 27, uk: "8" },
-      ];
-
-      const chart = gender === "male" ? maleShoeChart : femaleShoeChart;
-      
-      // Find the closest match
-      let closestSize = chart[0];
-      let closestDiff = Math.abs(footLengthCM - chart[0].cm);
-
-      for (let i = 1; i < chart.length; i++) {
-        const diff = Math.abs(footLengthCM - chart[i].cm);
-        if (diff < closestDiff) {
-          closestDiff = diff;
-          closestSize = chart[i];
-        }
-      }
-
-      return closestSize.uk;
-    };
-
-    const footLengthCM = parseFloat(formData.shoe_size);
-    const recommendedShoeSize = footLengthCM ? getUKShoeSize(footLengthCM, gender) : "";
-
     setFormData((prev) => ({
       ...prev,
       shirtSize: adjustedShirtSize,
       pantSize: pantSize,
-      shoe_size: recommendedShoeSize,
+      shoe_size: prev.shoe_size,
     }));
   };
 
