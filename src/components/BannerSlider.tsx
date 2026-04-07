@@ -29,7 +29,7 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
   // navigation handled via autoplay and dots; no arrow controls per design
 
   return (
-    <div className="w-full h-96 sm:h-[520px] lg:h-[640px] relative bg-orange-50 rounded-lg overflow-visible">
+    <div className="w-full h-[300px] sm:h-[420px] md:h-[520px] lg:h-[620px] relative bg-orange-50 rounded-lg overflow-visible">
       {images.map((img, i) => (
         <div
           key={img.src}
@@ -42,7 +42,7 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
           <img
             src={img.src}
             alt={img.title || `slide-${i}`}
-            className="w-full h-full object-contain object-center p-6 shadow-none border-0"
+            className="w-full h-full object-contain object-center p-4 sm:p-6 shadow-none border-0"
             onError={(e) => {
               // fallback to an existing image if requested file is missing
               const target = e.target as HTMLImageElement;
@@ -52,9 +52,9 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
               }
             }}
           />
-          <div className="absolute left-6 bottom-8 bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-md">
-            <h3 className="text-lg font-bold text-gray-900">{img.title}</h3>
-            <p className="text-sm text-gray-700">{img.subtitle}</p>
+          <div className="absolute left-3 right-3 sm:left-6 sm:right-auto bottom-10 sm:bottom-8 bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 sm:p-4 shadow-md">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">{img.title}</h3>
+            <p className="text-xs sm:text-sm text-gray-700">{img.subtitle}</p>
           </div>
         </div>
       ))}
@@ -62,13 +62,13 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
       {/* No arrow controls — navigation via dots and autoplay */}
 
       {/* Dots */}
-      <div className="absolute left-1/2 -translate-x-1/2 bottom-6 flex gap-2">
+      <div className="absolute left-1/2 -translate-x-1/2 bottom-4 sm:bottom-6 flex gap-2">
         {images.map((_, i) => (
           <button
             key={i}
             aria-label={`Go to slide ${i + 1}`}
             onClick={() => setIndex(i)}
-            className={`h-2 w-8 rounded-full transition-all duration-300 ${
+            className={`h-2 w-6 sm:w-8 rounded-full transition-all duration-300 ${
               i === index ? "bg-orange-600" : "bg-gray-300"
             }`}
           />

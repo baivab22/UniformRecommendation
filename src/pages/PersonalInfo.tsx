@@ -175,22 +175,22 @@ const PersonalInfo = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       
-      <div className="flex-grow p-4">
+      <div className="flex-grow p-3 sm:p-4 md:p-6">
         <div className="container mx-auto max-w-2xl">
           <Card className="shadow-card">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary flex items-center justify-center">
+            <CardHeader className="text-center px-4 sm:px-6">
+              <div className="mx-auto mb-3 sm:mb-4 h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-primary flex items-center justify-center">
                 <UserCircle className="h-8 w-8 text-white" />
               </div>
-              <CardTitle className="text-3xl font-semibold text-gray-900">
+              <CardTitle className="text-2xl sm:text-3xl font-semibold text-gray-900">
                 Personal Information
               </CardTitle>
-              <CardDescription className="text-lg text-gray-600">
+              <CardDescription className="text-base sm:text-lg text-gray-600">
                 Complete your profile to finalize your order
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <CardContent className="px-4 sm:px-6">
+              <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
                 {/* Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -315,7 +315,7 @@ const PersonalInfo = () => {
 
                 {/* Terms & Conditions */}
                 <div className="space-y-4">
-                  <div className="rounded-lg border p-4 bg-muted/50">
+                  <div className="rounded-lg border p-3 sm:p-4 bg-muted/50">
                     <h4 className="font-semibold mb-2">Terms & Conditions</h4>
                     <Textarea
                       readOnly
@@ -331,7 +331,7 @@ const PersonalInfo = () => {
                         handleInputChange("agreeToTerms", !!checked)
                       }
                     />
-                    <Label htmlFor="terms" className="text-sm">
+                    <Label htmlFor="terms" className="text-sm leading-relaxed">
                       I agree to the terms and conditions *
                     </Label>
                   </div>

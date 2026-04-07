@@ -25,9 +25,7 @@ import {
   ShoppingBag,
   Footprints,
   CheckCircle,
-  ZoomIn,
 } from "lucide-react";
-import { ImageMagnifier } from "@/components/ImageMagnifier";
 
 // Import morphology images
 import slimMorphology from "/lovable-uploads/80c23089-2483-4d72-b7f1-426457668814.png";
@@ -130,7 +128,8 @@ const SHOE_SIZE_CHART = {
 type Props = {
   gender: "male" | "female";
   measurementType: "all" | "shirt" | "shoes" | "pant";
-  onSubmit: (data: any) => void;
+  onSubmit: (data: Record<string, string>) => void;
+  onBackAtStart?: () => void;
 };
 
 type MeasurementStep =
@@ -144,7 +143,7 @@ type MeasurementStep =
   | "shoesMeasurements"
   | "recommendation";
 
-const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
+const MeasurementForm = ({ gender, measurementType, onSubmit, onBackAtStart }: Props) => {
   const getInitialStep = (): MeasurementStep => {
     if (measurementType === "pant") return "pantFit";
     if (measurementType === "shoes") return "shoesMeasurements";
@@ -294,28 +293,18 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
   };
 
   const getPantFitOptions = () => {
-    if (gender === "female") {
-      return [
-        { id: "skinny", label: "Skinny", description: "Very tight fit" },
-        { id: "slim", label: "Slim", description: "Close-fitting" },
-        { id: "straight", label: "Straight", description: "Classic fit" },
-        { id: "bootcut", label: "Bootcut", description: "Slightly flared" },
-        { id: "wide", label: "Wide Leg", description: "Loose and flowing" },
-      ];
-    }
-
     return [
       {
         id: "slim",
-        label: "Slim Fit",
+        label: "Slim",
         description: "Close-fitting silhouette",
       },
       {
         id: "regular",
-        label: "Regular Fit",
+        label: "Regular",
         description: "Standard comfortable fit",
       },
-      { id: "loose", label: "Loose Fit", description: "Relaxed and roomy" },
+      { id: "loose", label: "Loose", description: "Relaxed and roomy" },
     ];
   };
 
@@ -354,6 +343,18 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+
+    const shouldAutoAdvance =
+      (currentStep === "shirtMorphology" && field === "morphology" && value.trim() !== "") ||
+      (currentStep === "shirtFit" && field === "shirtFit" && value.trim() !== "") ||
+      (currentStep === "pantFit" && field === "pantFit" && value.trim() !== "") ||
+      (currentStep === "shoesMeasurements" && field === "shoe_size" && value.trim() !== "");
+
+    if (shouldAutoAdvance) {
+      window.setTimeout(() => {
+        handleNext();
+      }, 140);
+    }
   };
 
   const calculateAllSizes = () => {
@@ -501,10 +502,12 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
       case "pantFit":
         return formData.pantFit !== "";
       case "pantMeasurements":
-        const required = ["waist"];
-        return required.every(
-          (field) => formData[field as keyof typeof formData]
-        );
+        {
+          const required = ["waist"];
+          return required.every(
+            (field) => formData[field as keyof typeof formData]
+          );
+        }
       case "shoesMeasurements":
         return formData.shoe_size !== "";
       case "recommendation":
@@ -548,28 +551,28 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
   };
 
   return (
-    <Card className="shadow-xl w-full mx-auto border border-orange-100 bg-white rounded-2xl">
+    <Card className="shadow-xl w-full mx-auto border border-orange-100 bg-white rounded-2xl overflow-hidden">
       {/* CardHeader removed as it was empty */}
 
-      <CardContent className="space-y-7 sm:space-y-8 p-4 sm:p-8 bg-white rounded-b-2xl">
+      <CardContent className="space-y-6 sm:space-y-8 p-3 sm:p-6 md:p-8 bg-white rounded-b-2xl">
         {currentStep === "personal" && (
           <div className="text-center space-y-8">
             {(measurementType === "all" || measurementType === "shirt") && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto">
                 <div className="space-y-3">
                   <Label
                     htmlFor="age"
-                    className="text-lg font-medium text-gray-700"
+                    className="text-base sm:text-lg font-medium text-gray-700"
                   >
                     Age
                   </Label>
                   <Input
                     id="age"
                     type="number"
-                    placeholder="25"
+                    placeholder="Enter your age"
                     value={formData.age}
                     onChange={(e) => handleInputChange("age", e.target.value)}
-                    className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                    className="text-center text-base sm:text-lg h-12 sm:h-14 border-2 border-blue-200 focus:border-blue-500"
                     min="13"
                     max="100"
                   />
@@ -577,33 +580,33 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
                 <div className="space-y-3">
                   <Label
                     htmlFor="height"
-                    className="text-lg font-medium text-gray-700"
+                    className="text-base sm:text-lg font-medium text-gray-700"
                   >
                     Height (cm)
                   </Label>
                   <Input
                     id="height"
                     type="number"
-                    placeholder="170"
+                    placeholder="Enter your height"
                     value={formData.height}
                     onChange={(e) => handleInputChange("height", e.target.value)}
-                    className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                    className="text-center text-base sm:text-lg h-12 sm:h-14 border-2 border-blue-200 focus:border-blue-500"
                   />
                 </div>
                 <div className="space-y-3">
                   <Label
                     htmlFor="weight"
-                    className="text-lg font-medium text-gray-700"
+                    className="text-base sm:text-lg font-medium text-gray-700"
                   >
                     Weight (kg)
                   </Label>
                   <Input
                     id="weight"
                     type="number"
-                    placeholder="65"
+                    placeholder="Enter your weight"
                     value={formData.weight}
                     onChange={(e) => handleInputChange("weight", e.target.value)}
-                    className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                    className="text-center text-base sm:text-lg h-12 sm:h-14 border-2 border-blue-200 focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -624,7 +627,7 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
             <RadioGroup
               value={formData.morphology}
               onValueChange={(value) => handleInputChange("morphology", value)}
-              className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-6 max-w-5xl mx-auto px-2 sm:px-0"
+              className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 max-w-5xl mx-auto px-0 sm:px-0"
             >
               {[
                 {
@@ -655,10 +658,10 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
                 <div key={option.id} className="flex flex-col items-center">
                   <Label
                     htmlFor={`morphology-${option.id}`}
-                    className={`cursor-pointer border-2 rounded-xl p-6 transition-all duration-300 flex flex-col items-center space-y-4 w-full text-center transform hover:scale-105 ${
+                    className={`cursor-pointer border-2 rounded-2xl p-1 sm:p-1.5 transition-all duration-300 flex flex-col items-center space-y-2 sm:space-y-2.5 w-full text-center transform hover:scale-105 overflow-hidden ${
                       formData.morphology === option.id
-                        ? "border-blue-500 bg-blue-100 shadow-lg"
-                        : "border-blue-200 hover:bg-blue-50 hover:border-blue-400"
+                        ? "border-blue-500 bg-blue-100 shadow-lg ring-2 ring-blue-200"
+                        : "border-blue-200 bg-white hover:bg-blue-50 hover:border-blue-400 hover:shadow-lg"
                     }`}
                   >
                     <RadioGroupItem
@@ -666,16 +669,22 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
                       id={`morphology-${option.id}`}
                       className="sr-only"
                     />
-                    <div className="w-24 h-32 border border-gray-300 rounded bg-white flex items-center justify-center p-2">
+                    <div
+                      className={`w-36 h-48 sm:w-44 sm:h-52 rounded-2xl flex items-center justify-center p-0.5 border-2 transition-all duration-300 ${
+                        formData.morphology === option.id
+                          ? "border-blue-400 bg-white"
+                          : "border-gray-200 bg-gradient-to-b from-white to-slate-50"
+                      }`}
+                    >
                       <img
                         src={option.image}
                         alt={`${option.label} body shape`}
-                        className="max-w-full max-h-full object-contain"
+                        className="max-w-full max-h-full object-contain drop-shadow-md scale-[1.14]"
                         style={{ border: 'none', boxShadow: 'none', background: 'transparent' }}
                       />
                     </div>
                     <span
-                      className={`font-semibold text-lg ${
+                      className={`font-semibold text-base sm:text-lg ${
                         formData.morphology === option.id
                           ? "text-blue-800"
                           : "text-gray-800"
@@ -684,7 +693,7 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
                       {option.label}
                     </span>
                     <span
-                      className={`text-sm ${
+                      className={`text-xs sm:text-sm ${
                         formData.morphology === option.id
                           ? "text-blue-700"
                           : "text-gray-600"
@@ -758,10 +767,10 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
         {currentStep === "shirtChestType" && (
           <div className="space-y-8">
             <div className="text-center space-y-3">
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">
+              <h2 className="text-2xl sm:text-3xl font-bold font-playfair text-gray-800">
                 Chest Type & Measurement
               </h2>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-sm sm:text-lg">
                 Choose your chest type and enter your precise measurement
               </p>
             </div>
@@ -824,11 +833,11 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
 
               {/* Chest Measurement */}
               <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-gray-800 text-center">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 text-center">
                   Enter Your Measurement
                 </h3>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6">
                   <h4 className="font-semibold text-blue-800 mb-4 flex items-center gap-2">
                     <Ruler className="h-5 w-5" />
                     How to Measure Your Chest
@@ -853,7 +862,7 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
                 <div className="space-y-3">
                   <Label
                     htmlFor="chest"
-                    className="text-lg font-medium text-gray-700"
+                    className="text-base sm:text-lg font-medium text-gray-700"
                   >
                     Chest Size (cm) *
                   </Label>
@@ -863,7 +872,7 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
                     placeholder={gender === "male" ? "e.g. 95" : "e.g. 110"}
                     value={formData.chest}
                     onChange={(e) => handleInputChange("chest", e.target.value)}
-                    className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                    className="text-center text-base sm:text-lg h-12 sm:h-14 border-2 border-blue-200 focus:border-blue-500"
                     min={gender === "male" ? "70" : "105"}
                     max={gender === "male" ? "105" : "150"}
                   />
@@ -884,26 +893,23 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
               </p>
             </div>
 
-            {/* Shirt Images Gallery with Magnify */}
+            {/* Shirt Images Gallery */}
             <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto px-2 sm:px-0">
               <div className="bg-purple-50 rounded-xl p-4 sm:p-8 border-2 border-purple-200">
                 <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6 flex-wrap">
-                  <ZoomIn className="h-4 sm:h-5 w-4 sm:w-5 text-purple-600" />
-                  <h3 className="text-base sm:text-xl font-semibold text-gray-800">Shirt Styles (hover to zoom)</h3>
+                  <h3 className="text-base sm:text-xl font-semibold text-gray-800">Shirt Styles</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                   {["shirt1.png", "shirt2.png", "shirt3.png", "shirt4.png"].map((image, idx) => (
-                    <div key={idx} className="space-y-2 sm:space-y-3">
-                      <ImageMagnifier
-                        src={`/${image.replace(/\.(jpg|jpeg|webp)$/i, '.png')}`}
-                        alt={`Shirt style ${idx + 1}`}
-                        magnifierHeight={180}
-                        magnifierWidth={180}
-                        zoomLevel={2.5}
-                        containerClassName="h-48 sm:h-64 md:h-80 rounded-lg"
-                        imageClassName="w-full h-full object-cover"
-                      />
-                      <p className="text-xs sm:text-sm font-medium text-gray-700">Style {idx + 1}</p>
+                    <div key={idx} className="space-y-2 sm:space-y-3 rounded-2xl border border-purple-200/80 bg-white/80 p-2 sm:p-2.5 shadow-sm hover:shadow-lg hover:border-purple-300 transition-all duration-300">
+                      <div className="h-48 sm:h-64 md:h-80 rounded-xl border border-purple-100 bg-white overflow-hidden flex items-center justify-center p-2">
+                        <img
+                          src={`/${image.replace(/\.(jpg|jpeg|webp)$/i, '.png')}`}
+                          alt={`Shirt style ${idx + 1}`}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <p className="text-xs sm:text-sm font-semibold text-gray-800">Style {idx + 1}</p>
                     </div>
                   ))}
                 </div>
@@ -926,12 +932,11 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
         {currentStep === "pantFit" && (
           <div className="flex flex-col items-center space-y-8 sm:space-y-10">
             <div className="space-y-2 sm:space-y-3 text-center">
-              <h2 className="text-3xl sm:text-4xl font-extrabold font-playfair text-gray-900 tracking-tight">
+              <h2 className="text-2xl sm:text-4xl font-extrabold font-playfair text-gray-900 tracking-tight">
                 Pant Fit Preference
               </h2>
               <p className="text-base sm:text-lg text-gray-500">
                 Select your preferred pant fit style
-                <span className="hidden sm:inline"> – hover or tap to zoom</span>
               </p>
             </div>
             <div className="w-full max-w-5xl">
@@ -946,12 +951,12 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
                     <div key={option.id} className="flex flex-col items-center">
                       <Label
                         htmlFor={`pantFit-${option.id}`}
-                        className={`cursor-pointer border-2 rounded-2xl p-6 sm:p-8 bg-white shadow-md transition-all duration-300 flex flex-col items-center space-y-4 w-full text-center transform hover:shadow-xl active:scale-98 sm:hover:scale-105 overflow-hidden ${
+                        className={`cursor-pointer border-2 rounded-2xl p-4 sm:p-5 bg-white shadow-md transition-all duration-300 flex flex-col items-center space-y-4 w-full text-center transform hover:shadow-xl active:scale-98 sm:hover:scale-105 overflow-hidden ${
                           formData.pantFit === option.id
-                            ? "border-blue-600 ring-2 ring-blue-200 bg-blue-50"
+                            ? "border-blue-600 ring-2 ring-blue-200 bg-blue-50 shadow-xl"
                             : "border-gray-200 hover:border-blue-400"
                         }`}
-                        style={{ minHeight: 340 }}
+                        style={{ minHeight: 430 }}
                       >
                         <RadioGroupItem
                           value={option.id}
@@ -959,15 +964,11 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
                           className="sr-only"
                         />
                         <div className="w-full flex justify-center">
-                          <div className="w-32 h-44 sm:w-40 sm:h-56 rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center mb-2 sm:mb-3 border border-gray-100">
-                            <ImageMagnifier
+                          <div className="w-[12rem] h-[16.5rem] sm:w-[15rem] sm:h-[21rem] rounded-xl overflow-hidden bg-gradient-to-b from-white to-slate-50 flex items-center justify-center mb-2 sm:mb-3 border-2 border-blue-100 shadow-md">
+                            <img
                               src={`/${pantImages[idx % pantImages.length]}`}
                               alt={option.label}
-                              magnifierHeight={140}
-                              magnifierWidth={140}
-                              zoomLevel={2.4}
-                              containerClassName="h-full"
-                              imageClassName="w-full h-full object-contain"
+                              className="w-full h-full object-contain"
                             />
                           </div>
                         </div>
@@ -1001,38 +1002,12 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
         {currentStep === "pantMeasurements" && (
           <div className="space-y-8">
             <div className="text-center space-y-3">
-              <h2 className="text-3xl font-bold font-playfair text-gray-800">
+              <h2 className="text-2xl sm:text-3xl font-bold font-playfair text-gray-800">
                 Pant Measurements
               </h2>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-sm sm:text-lg">
                 Enter your precise measurements for the perfect fit
               </p>
-            </div>
-
-            {/* Pant Images Gallery with Magnify */}
-            <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto px-2 sm:px-0">
-              <div className="bg-amber-50 rounded-xl p-4 sm:p-8 border-2 border-amber-200">
-                <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6 flex-wrap">
-                  <ZoomIn className="h-4 sm:h-5 w-4 sm:w-5 text-amber-600" />
-                  <h3 className="text-base sm:text-xl font-semibold text-gray-800">Pant Styles (hover to zoom)</h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                  {["pant1.png", "pant2.png", "pant3.png", "pant4.png", "pant5.png"].slice(0, 3).map((image, idx) => (
-                    <div key={idx} className="space-y-2 sm:space-y-3">
-                      <ImageMagnifier
-                        src={`/${image.replace(/\.(jpg|jpeg|webp)$/i, '.png')}`}
-                        alt={`Pant style ${idx + 1}`}
-                        magnifierHeight={180}
-                        magnifierWidth={180}
-                        zoomLevel={2.5}
-                        containerClassName="h-48 sm:h-64 md:h-80 rounded-lg"
-                        imageClassName="w-full h-full object-cover"
-                      />
-                      <p className="text-xs sm:text-sm font-medium text-gray-700">Style {idx + 1}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* Measurement Form */}
@@ -1041,7 +1016,7 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="waist"
-                    className="text-lg font-medium text-gray-700"
+                    className="text-base sm:text-lg font-medium text-gray-700"
                   >
                     Waist *
                   </Label>
@@ -1076,7 +1051,7 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
                   placeholder={formData.waistUnit === "cm" ? "e.g. 82" : "e.g. 32"}
                   value={formData.waist}
                   onChange={(e) => handleInputChange("waist", e.target.value)}
-                  className="text-center text-lg h-14 border-2 border-blue-200 focus:border-blue-500"
+                  className="text-center text-base sm:text-lg h-12 sm:h-14 border-2 border-blue-200 focus:border-blue-500"
                   step="0.5"
                 />
               </div>
@@ -1147,26 +1122,23 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
               </p>
             </div>
 
-            {/* Shoe Images Gallery with Magnify */}
+            {/* Shoe Images Gallery */}
             <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto px-2 sm:px-0">
               <div className="bg-green-50 rounded-xl p-4 sm:p-8 border-2 border-green-200">
                 <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6 flex-wrap">
-                  <ZoomIn className="h-4 sm:h-5 w-4 sm:w-5 text-green-600" />
-                  <h3 className="text-base sm:text-xl font-semibold text-gray-800">Shoe Styles (hover to zoom)</h3>
+                  <h3 className="text-base sm:text-xl font-semibold text-gray-800">Shoe Styles</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
                   {["shoes1.png", "shoes2.png"].map((image, idx) => (
-                    <div key={idx} className="space-y-2 sm:space-y-3">
-                      <ImageMagnifier
-                        src={`/${image.replace(/\.(jpg|jpeg|webp)$/i, '.png')}`}
-                        alt={`Shoe style ${idx + 1}`}
-                        magnifierHeight={200}
-                        magnifierWidth={200}
-                        zoomLevel={2.5}
-                        containerClassName="h-64 sm:h-80 md:h-96 rounded-lg"
-                        imageClassName="w-full h-full object-cover"
-                      />
-                      <p className="text-xs sm:text-sm font-medium text-gray-700">Style {idx + 1}</p>
+                    <div key={idx} className="space-y-2 sm:space-y-3 rounded-2xl border border-green-200/80 bg-white/80 p-2 sm:p-2.5 shadow-sm hover:shadow-lg hover:border-green-300 transition-all duration-300">
+                      <div className="h-64 sm:h-80 md:h-96 rounded-xl border border-green-100 bg-white overflow-hidden flex items-center justify-center p-2">
+                        <img
+                          src={`/${image.replace(/\.(jpg|jpeg|webp)$/i, '.png')}`}
+                          alt={`Shoe style ${idx + 1}`}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <p className="text-xs sm:text-sm font-semibold text-gray-800">Style {idx + 1}</p>
                     </div>
                   ))}
                 </div>
@@ -1261,14 +1233,13 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
           </div>
         )}
 
-        <div className="flex flex-row flex-wrap justify-between items-center pt-6 sm:pt-8 gap-3 sm:gap-4 border-t border-blue-100 w-full">
-          {/* Back button always at the far left */}
-          <div className="flex-1 min-w-[90px] flex items-center">
-            {currentStepIndex > 0 && (
+        <div className="flex flex-col sm:flex-row sm:flex-wrap justify-between sm:items-center pt-6 sm:pt-8 gap-3 sm:gap-4 border-t border-blue-100 w-full">
+          <div className="w-full sm:flex-1 min-w-[90px] flex items-center">
+            {(currentStepIndex > 0 || onBackAtStart) && (
               <Button
                 type="button"
-                onClick={handleBack}
-                className="flex items-center gap-2 px-3 py-2 text-xs font-semibold min-w-fit bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-black border border-gray-300 shadow-sm transition-colors duration-200"
+                onClick={currentStepIndex > 0 ? handleBack : onBackAtStart}
+                className="w-fit flex items-center justify-start gap-2 px-3 py-2 text-xs sm:text-sm font-semibold min-w-fit bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-black border border-gray-300 shadow-sm transition-colors duration-200"
               >
                 <ArrowLeft className="h-3 sm:h-4 w-3 sm:w-4" />
                 Back
@@ -1276,12 +1247,12 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
             )}
           </div>
           {/* Skip and Next side by side, right aligned */}
-          <div className="flex flex-row gap-3 min-w-[180px] justify-end">
+          <div className="w-full sm:w-auto flex flex-row gap-3 min-w-0 sm:min-w-[180px] justify-end">
             {currentStep !== "recommendation" && (
               <Button
                 type="button"
                 onClick={handleSkip}
-                className="px-3 py-2 text-xs font-semibold min-w-fit bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-black border border-gray-300 shadow-sm transition-colors duration-200"
+                className="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold min-w-fit bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-black border border-gray-300 shadow-sm transition-colors duration-200"
               >
                 Skip
               </Button>
@@ -1289,7 +1260,7 @@ const MeasurementForm = ({ gender, measurementType, onSubmit }: Props) => {
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm min-w-fit"
+              className="flex-1 sm:flex-none bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm min-w-fit"
             >
               {currentStepIndex === steps.length - 1 ? "Finish" : "Next"}
             </Button>
