@@ -139,6 +139,31 @@ const PersonalInfo = () => {
         agreeToTerms: undefined,
       };
 
+      // Map measurement_type to clothing_type if present
+      if (combinedData.measurement_type) {
+        combinedData.clothing_type = combinedData.measurement_type;
+        delete combinedData.measurement_type;
+      }
+
+      // Clean up sizes based on what was actually measured
+      // Only keep sizes that correspond to the submitted measurement type
+      const measurementType = combinedData.clothing_type || 'all';
+      
+      if (measurementType === "shirt") {
+        // Remove pant and shoe sizes
+        combinedData.pantSize = undefined;
+        combinedData.shoe_size = undefined;
+      } else if (measurementType === "pant") {
+        // Remove shirt and shoe sizes
+        combinedData.shirtSize = undefined;
+        combinedData.shoe_size = undefined;
+      } else if (measurementType === "shoes") {
+        // Remove shirt and pant sizes
+        combinedData.shirtSize = undefined;
+        combinedData.pantSize = undefined;
+      }
+      // If "all", keep all sizes
+
       const cleanedData = Object.fromEntries(
         Object.entries(combinedData).filter(
           ([_, value]) => value !== null && value !== "" && value !== undefined

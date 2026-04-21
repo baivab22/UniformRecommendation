@@ -70,7 +70,7 @@ const AdminDashboard = () => {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'name', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'created_at', direction: 'desc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const navigate = useNavigate();
@@ -283,8 +283,10 @@ const AdminDashboard = () => {
     let bVal = b[key];
 
     if (key === 'created_at') {
-      aVal = new Date(aVal).getTime();
-      bVal = new Date(bVal).getTime();
+      const aDateValue = a.created_at || a.createdAt;
+      const bDateValue = b.created_at || b.createdAt;
+      aVal = aDateValue ? new Date(aDateValue).getTime() : 0;
+      bVal = bDateValue ? new Date(bDateValue).getTime() : 0;
     } else if (typeof aVal === 'string') {
       aVal = aVal.toLowerCase();
       bVal = bVal.toLowerCase();
@@ -650,7 +652,7 @@ const AdminDashboard = () => {
                           </td>
                           <td className="px-6 py-4 text-sm">
                             <div className="space-y-1">
-                              {shirtSize && (
+                              {shirtSize && (!student.clothing_type || student.clothing_type === "all" || student.clothing_type === "shirt") && (
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-gray-500 w-12">Shirt:</span>
                                   <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
@@ -658,7 +660,7 @@ const AdminDashboard = () => {
                                   </span>
                                 </div>
                               )}
-                              {pantSize && (
+                              {pantSize && (!student.clothing_type || student.clothing_type === "all" || student.clothing_type === "pant") && (
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-gray-500 w-12">Pant:</span>
                                   <span className="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">
@@ -666,7 +668,7 @@ const AdminDashboard = () => {
                                   </span>
                                 </div>
                               )}
-                              {student.shoe_size && (
+                              {student.shoe_size && (!student.clothing_type || student.clothing_type === "all" || student.clothing_type === "shoes") && (
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-gray-500 w-12">Shoe (UK):</span>
                                   <span className="inline-block px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium">
@@ -1013,21 +1015,21 @@ const AdminDashboard = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Recommended Sizes</h3>
                   <div className="grid grid-cols-3 gap-4">
-                    {getStoredShirtSize(selectedStudent) && (
+                    {getStoredShirtSize(selectedStudent) && (!selectedStudent.clothing_type || selectedStudent.clothing_type === "all" || selectedStudent.clothing_type === "shirt") && (
                       <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg text-center">
                         <Shirt className="h-6 w-6 text-purple-600 mx-auto mb-2" />
                         <p className="text-xs text-gray-600 mb-1">Shirt Size</p>
                         <p className="text-2xl font-bold text-purple-700">{getStoredShirtSize(selectedStudent)}</p>
                       </div>
                     )}
-                    {getStoredPantSize(selectedStudent) && (
+                    {getStoredPantSize(selectedStudent) && (!selectedStudent.clothing_type || selectedStudent.clothing_type === "all" || selectedStudent.clothing_type === "pant") && (
                       <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-lg text-center">
                         <ShoppingBag className="h-6 w-6 text-emerald-600 mx-auto mb-2" />
                         <p className="text-xs text-gray-600 mb-1">Pant Size</p>
                         <p className="text-2xl font-bold text-emerald-700">{getStoredPantSize(selectedStudent)}</p>
                       </div>
                     )}
-                    {selectedStudent.shoe_size && (
+                    {selectedStudent.shoe_size && (!selectedStudent.clothing_type || selectedStudent.clothing_type === "all" || selectedStudent.clothing_type === "shoes") && (
                       <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg text-center">
                         <Footprints className="h-6 w-6 text-orange-600 mx-auto mb-2" />
                         <p className="text-xs text-gray-600 mb-1">Shoe Size (UK)</p>

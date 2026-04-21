@@ -456,7 +456,15 @@ const MeasurementForm = ({ gender, measurementType, onSubmit, onBackAtStart }: P
     if (currentIndex < steps.length - 1) {
       setCurrentStep(steps[currentIndex + 1]);
     } else {
-      onSubmit(formData);
+      // Add measurement type to the submitted data
+      const dataToSubmit = {
+        ...formData,
+        measurement_type: measurementType
+      };
+
+
+      console.log(dataToSubmit,"data to submit value");
+      onSubmit(dataToSubmit);
     }
   };
 
